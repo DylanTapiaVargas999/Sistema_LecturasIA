@@ -1,0 +1,313 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { authService, type RegistroEstudianteDto, type GradoOption } from '../services/authService';
+
+export default function EstudianteAuth() {
+  const [modo, setModo] = useState<'login' | 'registro'>('login');
+  const [grados, setGrados] = useState<GradoOption[]>([]);
+  const [registroExitoso, setRegistroExitoso] = useState(false);
+  const [emailRegistrado, setEmailRegistrado] = useState('');
+  
+  const [formDataLogin, setFormDataLogin] = useState({
+    email: '',
+    password: ''
+  });
+
+  const [formDataRegistro, setFormDataRegistro] = useState<RegistroEstudianteDto>({
+    email: '',
+    password: '',
+    confirmarPassword: '',
+    nombreCompleto: '',
+    grado: 4,
+    edad: 9
+  });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Cargar grados disponibles
+  useEffect(() => {
+    if (modo === 'registro') {
+      cargarGrados();
+    }
+  }, [modo]);
+
+  const cargarGrados = async () => {
+    try {
+      const gradosData = await authService.obtenerGrados();
+      setGrados(gradosData);
+    } catch (err) {
+      console.error('Error al cargar grados:', err);
+      // Grados por defecto si falla
+      setGrados([
+        { value: 4, label: '4to Grado' },
+        { value: 5, label: '5to Grado' },
+        { value: 6, label: '6to Grado' }
+      ]);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const resultado = await authService.login(formDataLogin);
+
+      // Estudiantes no deberían recibir requiereVerificacion
+      if ('requiereVerificacion' in resultado) {
+        setError('Este acceso es solo para estudiantes');
+        setLoading(false);
+        return;
+      }
+
+      // Verificar que sea estudiante
+      if (resultado.tipoUsuario !== 'Estudiante') {
+        setError('Este acceso es solo para estudiantes');
+        setLoading(false);
+        return;
+      }
+
+      // Guardar sesión y redirigir
+      authService.guardarSesion(resultado);
+      navigate('/estudiante/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.mensaje || 'Correo o contraseña incorrectos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegistro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formDataRegistro.password !== formDataRegistro.confirmarPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (formDataRegistro.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await authService.registrarEstudiante(formDataRegistro);
+      setEmailRegistrado(formDataRegistro.email);
+      setRegistroExitoso(true);
+    } catch (err: any) {
+      setError(err.response?.data?.mensaje || 'Error en el registro');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Vista de registro exitoso
+  if (registroExitoso) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
+          <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">¡Registro Exitoso!</h2>
+          <p className="text-gray-600 mb-2">
+            Hemos enviado un email de verificación a:
+          </p>
+          <p className="text-blue-600 font-semibold mb-6">{emailRegistrado}</p>
+          <p className="text-gray-600 text-sm mb-8">
+            Por favor revisa tu correo y haz clic en el enlace para activar tu cuenta.
+          </p>
+          <button
+            onClick={() => {
+              setRegistroExitoso(false);
+              setModo('login');
+            }}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Ir a Iniciar Sesión
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <button
+          onClick={() => navigate('/')}
+          className="mb-6 text-white hover:text-blue-200 flex items-center"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Volver
+        </button>
+
+        <div className="bg-white rounded-lg shadow-xl p-8">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800">Estudiantes</h2>
+          </div>
+
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setModo('login')}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition ${
+                modo === 'login' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'
+              }`}
+            >
+              Iniciar Sesión
+            </button>
+            <button
+              onClick={() => setModo('registro')}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition ${
+                modo === 'registro' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'
+              }`}
+            >
+              Registrarse
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              {error}
+              {error.includes('ya está registrado') && (
+                <button
+                  onClick={() => setModo('login')}
+                  className="ml-2 underline font-medium"
+                >
+                  Ir al Login
+                </button>
+              )}
+            </div>
+          )}
+
+          {modo === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de usuario</label>
+                <input
+                  type="text"
+                  name="nombreUsuario"
+                  value={formData.nombreUsuario}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {loading ? 'Accediendo...' : 'Acceder'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegistro} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                <input
+                  type="text"
+                  name="nombreCompleto"
+                  value={formData.nombreCompleto}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de usuario</label>
+                <input
+                  type="text"
+                  name="nombreUsuario"
+                  value={formData.nombreUsuario}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                <input
+                  type="password"
+                  name="confirmarPassword"
+                  value={formData.confirmarPassword}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código de Estudiante
+                  <span className="text-xs text-gray-500 block mt-1">Proporcionado por tu docente</span>
+                </label>
+                <input
+                  type="text"
+                  name="codigoEstudiante"
+                  value={formData.codigoEstudiante}
+                  onChange={handleChange}
+                  required
+                  placeholder="EST-2025-XXX"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
