@@ -32,8 +32,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<AsignacionExamen> AsignacionesExamen { get; set; }
     
     // Sistema de códigos ELIMINADO - Ahora se usa verificación por email
-    // public DbSet<CodigoRegistroEstudiante> CodigosRegistroEstudiante { get; set; }
-    // public DbSet<CodigoRegistroDocente> CodigosRegistroDocente { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

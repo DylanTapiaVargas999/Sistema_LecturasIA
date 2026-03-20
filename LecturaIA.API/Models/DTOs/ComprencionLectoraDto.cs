@@ -9,7 +9,7 @@ namespace LecturaIA.API.Models.DTOs
     /// </summary>
     public class IniciarLecturaDto
     {
-        public int LecturaId { get; set; }
+        public required int LecturaId { get; set; }
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ namespace LecturaIA.API.Models.DTOs
     public class FinalizarLecturaDto
     {
         public Guid SesionLecturaId { get; set; }
-        public decimal TiempoLecturaMinutos { get; set; }
+        public required decimal TiempoLecturaMinutos { get; set; }
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ namespace LecturaIA.API.Models.DTOs
     /// </summary>
     public class ActualizarTiempoDto
     {
-        public decimal TiempoLecturaMinutos { get; set; }
+        public required decimal TiempoLecturaMinutos { get; set; }
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ namespace LecturaIA.API.Models.DTOs
     /// </summary>
     public class GenerarCuestionarioDto
     {
-        public Guid SesionLecturaId { get; set; }
+        public required Guid SesionLecturaId { get; set; }
     }
 
     /// <summary>
@@ -112,9 +112,9 @@ namespace LecturaIA.API.Models.DTOs
     /// </summary>
     public class EnviarRespuestasDto
     {
-        public Guid CuestionarioId { get; set; }
+        public required Guid CuestionarioId { get; set; }
         public List<RespuestaDto> Respuestas { get; set; } = new();
-        public decimal TiempoCuestionarioMinutos { get; set; }
+        public required decimal TiempoCuestionarioMinutos { get; set; }
     }
 
     // ===============================================
@@ -241,7 +241,7 @@ namespace LecturaIA.API.Models.DTOs
     /// </summary>
     public class MarcarFavoritaDto
     {
-        public Guid LecturaId { get; set; }
-        public bool EsFavorita { get; set; }
+        public required Guid LecturaId { get; set; }
+        public required bool EsFavorita { get; set; }
     }
 }

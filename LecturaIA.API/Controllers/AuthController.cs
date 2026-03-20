@@ -9,6 +9,7 @@ namespace LecturaIA.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private const string DatosInvalidosMensaje = "Datos inválidos";
 
     public AuthController(IAuthService authService)
     {
@@ -20,7 +21,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         // Verificar email duplicado
@@ -55,7 +56,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         // Verificar email duplicado primero
@@ -90,7 +91,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         var resultado = await _authService.Login(dto);
@@ -183,7 +184,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { mensaje = "Email inválido", errores = ModelState });
         }
 
-        var resultado = await _authService.SolicitarRecuperacionPassword(dto.Email);
+        await _authService.SolicitarRecuperacionPassword(dto.Email);
 
         // Por seguridad, siempre devolvemos éxito aunque el email no exista
         return Ok(new
@@ -197,7 +198,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         var resultado = await _authService.RestablecerPassword(dto.Token, dto.NuevaPassword);
@@ -221,7 +222,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         var resultado = await _authService.VerificarCodigoLogin(dto.Email, dto.Codigo);

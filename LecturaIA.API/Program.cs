@@ -61,7 +61,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"] ?? "DefaultSecretKeyForDevelopment123456";
+var secretKey = jwtSettings["SecretKey"]
+    ?? throw new InvalidOperationException("JwtSettings:SecretKey no está configurada en la aplicación.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -139,8 +140,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Deshabilitado en desarrollo local para usar HTTP
-// app.UseHttpsRedirection();
+// UseHttpsRedirection deshabilitado en desarrollo local para usar HTTP
 
 // Servir archivos estáticos (imágenes generadas)
 app.UseStaticFiles();
@@ -152,4 +152,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

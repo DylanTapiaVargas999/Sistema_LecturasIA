@@ -18,6 +18,7 @@ namespace LecturaIA.API.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILecturaIAService _lecturaIAService;
         private readonly ILogger<LecturasController> _logger;
+        private const string EstudianteNoEncontrado = "Estudiante no encontrado";
 
         public LecturasController(
             ApplicationDbContext context,
@@ -42,7 +43,7 @@ namespace LecturaIA.API.Controllers
 
                 if (estudiante == null)
                 {
-                    return Unauthorized(new { mensaje = "Estudiante no encontrado" });
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
 
                 // Validaciones
@@ -61,7 +62,7 @@ namespace LecturaIA.API.Controllers
                 var random = new Random();
                 var tipoLectura = tiposLectura[random.Next(tiposLectura.Length)];
 
-                _logger.LogInformation($"Generando lectura de tipo {tipoLectura} para estudiante {estudiante.Id}");
+                _logger.LogInformation("Generando lectura de tipo {TipoLectura} para estudiante {EstudianteId}", tipoLectura, estudiante.Id);
 
                 // Generar lectura con IA
                 var (titulo, contenido, urlImagen) = await _lecturaIAService.GenerarLecturaAsync(
@@ -94,7 +95,7 @@ namespace LecturaIA.API.Controllers
                 _context.Lecturas.Add(lectura);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Lectura generada exitosamente con ID {lectura.Id}");
+                _logger.LogInformation("Lectura generada exitosamente con ID {LecturaId}", lectura.Id);
 
                 return Ok(new LecturaGeneradaDto
                 {
@@ -126,7 +127,7 @@ namespace LecturaIA.API.Controllers
 
                 if (estudiante == null)
                 {
-                    return Unauthorized(new { mensaje = "Estudiante no encontrado" });
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
 
                 var lecturas = await _context.Lecturas
@@ -168,31 +169,31 @@ namespace LecturaIA.API.Controllers
             try
             {
                 var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                _logger.LogInformation($"Buscando lectura {id} para usuario {usuarioId}");
+                _logger.LogInformation("Buscando lectura {LecturaId} para usuario {UsuarioId}", id, usuarioId);
                 
                 var estudiante = await _context.Estudiantes
                     .FirstOrDefaultAsync(e => e.UsuarioId == usuarioId);
 
                 if (estudiante == null)
                 {
-                    _logger.LogWarning($"No se encontró estudiante para usuario {usuarioId}");
-                    return Unauthorized(new { mensaje = "Estudiante no encontrado" });
+                    _logger.LogWarning("No se encontró estudiante para usuario {UsuarioId}", usuarioId);
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
 
-                _logger.LogInformation($"Estudiante encontrado: {estudiante.Id}");
+                _logger.LogInformation("Estudiante encontrado: {EstudianteId}", estudiante.Id);
 
                 var lectura = await _context.Lecturas
                     .FirstOrDefaultAsync(l => l.Id == id && l.EstudianteId == estudiante.Id);
 
                 if (lectura == null)
                 {
-                    _logger.LogWarning($"No se encontró lectura {id} para estudiante {estudiante.Id}");
+                    _logger.LogWarning("No se encontró lectura {LecturaId} para estudiante {EstudianteId}", id, estudiante.Id);
                     
                     // Verificar si la lectura existe pero no pertenece al estudiante
                     var lecturaExiste = await _context.Lecturas.AnyAsync(l => l.Id == id);
                     if (lecturaExiste)
                     {
-                        _logger.LogWarning($"La lectura {id} existe pero no pertenece al estudiante {estudiante.Id}");
+                        _logger.LogWarning("La lectura {LecturaId} existe pero no pertenece al estudiante {EstudianteId}", id, estudiante.Id);
                         return NotFound(new { mensaje = "Lectura no encontrada o no tienes permiso para acceder a ella" });
                     }
                     
@@ -237,7 +238,7 @@ namespace LecturaIA.API.Controllers
 
                 if (estudiante == null)
                 {
-                    return Unauthorized(new { mensaje = "Estudiante no encontrado" });
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
 
                 var lectura = await _context.Lecturas
@@ -260,6 +261,9 @@ namespace LecturaIA.API.Controllers
                     var cuestionarios = await _context.Cuestionarios
                         .Where(c => c.SesionLecturaId == sesion.Id)
                         .ToListAsync();
+
+                    // Simplificado: obtener IDs de cuestionarios para consultas
+                    var cuestionariosIds = cuestionarios.Select(c => c.Id).ToList();
 
                     foreach (var cuestionario in cuestionarios)
                     {
@@ -294,13 +298,13 @@ namespace LecturaIA.API.Controllers
                 _context.Lecturas.Remove(lectura);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Lectura {id} eliminada exitosamente por estudiante {estudiante.Id}");
+                _logger.LogInformation("Lectura {LecturaId} eliminada exitosamente por estudiante {EstudianteId}", id, estudiante.Id);
 
                 return Ok(new { mensaje = "Lectura eliminada exitosamente" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error al eliminar lectura {id}");
+                _logger.LogError(ex, "Error al eliminar lectura {LecturaId}", id);
                 return StatusCode(500, new { mensaje = "Error al eliminar la lectura", detalle = ex.Message });
             }
         }
@@ -317,7 +321,7 @@ namespace LecturaIA.API.Controllers
 
                 if (estudiante == null)
                 {
-                    return Unauthorized(new { mensaje = "Estudiante no encontrado" });
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
 
                 var lectura = await _context.Lecturas
@@ -352,7 +356,7 @@ namespace LecturaIA.API.Controllers
 
                 if (estudiante == null)
                 {
-                    return Unauthorized(new { mensaje = "Estudiante no encontrado" });
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
 
                 var lecturas = await _context.Lecturas

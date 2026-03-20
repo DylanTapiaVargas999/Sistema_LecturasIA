@@ -20,7 +20,7 @@ const LecturaDetalle: React.FC = () => {
 
       try {
         setIsLoading(true);
-        const lecturaData = await lecturaService.obtenerLectura(parseInt(id));
+        const lecturaData = await lecturaService.obtenerLectura(parseInt(id, 10));
         setLectura(lecturaData);
       } catch (error: any) {
         setError(error.message || 'Error al cargar la lectura');
@@ -173,8 +173,8 @@ const LecturaDetalle: React.FC = () => {
                       <div>
                         <span className="text-gray-600 font-semibold">Temas:</span>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {lectura.preferencias.temas.map((tema, index) => (
-                            <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                          {lectura.preferencias.temas.map((tema) => (
+                            <span key={tema} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                               {tema}
                             </span>
                           ))}
@@ -185,8 +185,8 @@ const LecturaDetalle: React.FC = () => {
                       <div>
                         <span className="text-gray-600 font-semibold">Personajes:</span>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {lectura.preferencias.personajes.map((personaje, index) => (
-                            <span key={index} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                          {lectura.preferencias.personajes.map((personaje) => (
+                            <span key={personaje} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                               {personaje}
                             </span>
                           ))}

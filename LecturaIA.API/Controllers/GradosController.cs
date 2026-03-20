@@ -19,6 +19,7 @@ public class GradosController : ControllerBase
     /// </summary>
     /// <returns>Lista de opciones de grado con value y label</returns>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<object>), StatusCodes.Status200OK)]
     public IActionResult ObtenerGrados()
     {
         try
@@ -40,7 +41,7 @@ public class GradosController : ControllerBase
         }
     }
 
-    private string ObtenerEtiquetaGrado(GradoEscolar grado)
+    private static string ObtenerEtiquetaGrado(GradoEscolar grado)
     {
         return grado switch
         {

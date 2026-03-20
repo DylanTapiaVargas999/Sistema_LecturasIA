@@ -47,13 +47,13 @@ namespace LecturaIA.API.Services
                 var (titulo, contenido) = await GenerarTextoConOpenAIAsync(preferencias, tipoLectura, edad, grado);
 
                 // PASO 2: Generar imagen con Hugging Face
-                var urlImagen = await GenerarImagenConHuggingFaceAsync(titulo, preferencias);
+                var urlImagen = await GenerarImagenConHuggingFaceAsync(preferencias);
 
                 return (titulo, contenido, urlImagen);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al generar lectura con IA");
+                _logger.LogError(ex, "Error al generar lectura con IA para tipo {TipoLectura}", tipoLectura);
                 throw;
             }
         }
@@ -143,7 +143,7 @@ Responde SOLO con el JSON, sin texto adicional.";
                             await Task.Delay((int)Math.Pow(2, intento) * 1000);
                             continue;
                         }
-                        throw new Exception($"Error en API de OpenAI: {response.StatusCode} - {errorContent}");
+                        throw new HttpRequestException($"Error en API de OpenAI: {response.StatusCode} - {errorContent}");
                     }
 
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -174,7 +174,7 @@ Responde SOLO con el JSON, sin texto adicional.";
                         return (titulo, contenido);
                     }
 
-                    throw new Exception("No se pudo extraer el JSON de la respuesta de OpenAI");
+                    throw new InvalidOperationException("No se pudo extraer el JSON de la respuesta de OpenAI");
                 }
                 catch (Exception ex) when (intento < 2)
                 {
@@ -183,10 +183,10 @@ Responde SOLO con el JSON, sin texto adicional.";
                 }
             }
             
-            throw new Exception("No se pudo generar la lectura después de 3 intentos");
+            throw new InvalidOperationException("No se pudo generar la lectura después de 3 intentos");
         }
 
-        private async Task<string> GenerarImagenConHuggingFaceAsync(string titulo, PreferenciasLecturaDto preferencias)
+        private async Task<string> GenerarImagenConHuggingFaceAsync(PreferenciasLecturaDto preferencias)
         {
             try
             {

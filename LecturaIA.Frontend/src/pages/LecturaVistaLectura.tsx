@@ -204,8 +204,8 @@ export default function LecturaVistaLectura() {
           {/* Contenido de la lectura - SCROLLEABLE */}
           <div className="p-8 max-h-[600px] overflow-y-auto">
             <div className="prose prose-lg max-w-none">
-              {lectura.contenido.split('\n\n').map((parrafo, index) => (
-                <p key={index} className="text-gray-700 leading-relaxed mb-4 text-justify">
+              {lectura.contenido.split('\n\n').map((parrafo, i) => (
+                <p key={`${i}-${parrafo.substring(0, 10)}`} className="text-gray-700 leading-relaxed mb-4 text-justify">
                   {parrafo}
                 </p>
               ))}
