@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SonarCloud Reporte - DylanTapiaVargas999_Sistema_LecturasIA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    a { color: #58a6ff; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0d2137 100%);
+      padding: 32px 40px 24px;
+      border-bottom: 2px solid #30363d;
+    }
+    .header h1 { font-size: 24px; color: #fff; margin-bottom: 4px; }
+    .header .meta { color: #8b949e; font-size: 12px; }
+
+    /* Nav */
+    .nav {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 0 40px;
+      display: flex;
+      gap: 4px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav a {
+      display: inline-block;
+      padding: 10px 16px;
+      color: #8b949e;
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      font-size: 13px;
+      transition: color .2s, border-color .2s;
+    }
+    .nav a:hover { color: #c9d1d9; border-color: #58a6ff; }
+
+    /* Content */
+    .content { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+
+    /* Section titles */
+    h2 {
+      font-size: 18px;
+      color: #e6edf3;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h3 { font-size: 15px; color: #e6edf3; margin: 24px 0 10px; }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .card-val { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+    .card-lbl { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; }
+    .card-blue  .card-val { color: #58a6ff; }
+    .card-red   .card-val { color: #f85149; }
+    .card-orange .card-val { color: #f0883e; }
+    .card-green .card-val { color: #3fb950; }
+    .card-grey  .card-val { color: #8b949e; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin-bottom: 8px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead tr { background: #21262d; }
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #8b949e;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      border-bottom: 1px solid #30363d;
+      white-space: nowrap;
+    }
+    td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #21262d;
+      vertical-align: top;
+    }
+    tr:hover td { background: #1c2128; }
+    .num { text-align: center; white-space: nowrap; color: #8b949e; }
+    .mono { font-family: 'Courier New', monospace; font-size: 11px; color: #79c0ff; word-break: break-all; }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+
+    /* Bar */
+    .bar-wrap { background: #21262d; border-radius: 4px; height: 8px; min-width: 80px; }
+    .bar { height: 8px; border-radius: 4px; transition: width .3s; }
+
+    /* Severity groups */
+    .sev-group { margin-bottom: 24px; }
+    .sev-header {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      padding: 6px 0;
+      letter-spacing: .3px;
+    }
+    .sev-count { font-weight: 400; color: #8b949e; font-size: 12px; }
+
+    /* Type section */
+    .type-section { margin-bottom: 48px; }
+    .type-count {
+      display: inline-block;
+      background: #21262d;
+      border-radius: 12px;
+      padding: 1px 10px;
+      font-size: 13px;
+      color: #8b949e;
+      font-weight: 400;
+    }
+
+    /* Severity table row */
+    .sev-table td:first-child { width: 140px; }
+
+    /* Print styles */
+    @media print {
+      body { background: #fff; color: #000; }
+      .nav { display: none; }
+      .header { background: #1e3a5f !important; -webkit-print-color-adjust: exact; }
+      .card { border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>SonarCloud — Reporte de Issues</h1>
+  <div class="meta">
+    Proyecto: <strong style="color:#fff">DylanTapiaVargas999_Sistema_LecturasIA</strong> &nbsp;·&nbsp;
+    Generado: 20/03/2026 13:02 &nbsp;·&nbsp;
+    Total issues: <strong style="color:#fff">275</strong>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="#resumen">Resumen</a>
+  <a href="#severidad">Severidad</a>
+  <a href="#bug">Bugs (0)</a>
+  <a href="#vulnerability">Vulnerabilidades (3)</a>
+  <a href="#code_smell">Code Smells (272)</a>
+</nav>
+
+<div class="content">
+
+  <section id="resumen">
+    <h2>📊 Resumen del Proyecto</h2>
+    
+    <div class="cards">
+      <div class="card card-blue"><div class="card-val">275</div><div class="card-lbl">Total Issues</div></div>
+      <div class="card card-red"><div class="card-val">0</div><div class="card-lbl">🐛 Bugs</div></div>
+      <div class="card card-orange"><div class="card-val">3</div><div class="card-lbl">🔒 Vulnerabilidades</div></div>
+      <div class="card card-green"><div class="card-val">272</div><div class="card-lbl">🌿 Code Smells</div></div>
+      <div class="card card-grey"><div class="card-val">20282</div><div class="card-lbl">📄 Lineas de codigo</div></div>
+      <div class="card card-grey"><div class="card-val">N/A</div><div class="card-lbl">✅ Cobertura</div></div>
+      <div class="card card-grey"><div class="card-val">6.0%</div><div class="card-lbl">📋 Duplicaciones</div></div>
+    </div>
+  </section>
+
+  <section id="severidad">
+    <h2>⚠️ Distribucion por Severidad</h2>
+    <div class="table-wrap">
+      <table class="sev-table">
+        <thead><tr><th>Severidad</th><th>Cantidad</th><th>%</th><th style="min-width:200px">Distribucion</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><span class="badge" style="background:#d32f2f">BLOCKER</span></td>
+          <td class="num">1</td>
+          <td>0.4%</td>
+          <td><div class="bar-wrap"><div class="bar" style="width:0.4%;background:#d32f2f"></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="badge" style="background:#e64a19">CRITICAL</span></td>
+          <td class="num">0</td>
+          <td>0.0%</td>
+          <td><div class="bar-wrap"><div class="bar" style="width:0.0%;background:#e64a19"></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="badge" style="background:#f57c00">HIGH</span></td>
+          <td class="num">11</td>
+          <td>4.0%</td>
+          <td><div class="bar-wrap"><div class="bar" style="width:4.0%;background:#f57c00"></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="badge" style="background:#f9a825">MEDIUM</span></td>
+          <td class="num">140</td>
+          <td>50.9%</td>
+          <td><div class="bar-wrap"><div class="bar" style="width:50.9%;background:#f9a825"></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="badge" style="background:#388e3c">LOW</span></td>
+          <td class="num">118</td>
+          <td>42.9%</td>
+          <td><div class="bar-wrap"><div class="bar" style="width:42.9%;background:#388e3c"></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="badge" style="background:#0288d1">INFO</span></td>
+          <td class="num">5</td>
+          <td>1.8%</td>
+          <td><div class="bar-wrap"><div class="bar" style="width:1.8%;background:#0288d1"></div></div></td>
+        </tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <h2 id="detalle">🔍 Detalle Completo de Issues</h2>
+  
+        <section class="type-section" id="vulnerability">
+          <h2>🔒 Vulnerabilidad (Seguridad) <span class="type-count">3</span></h2>
+          
+            <div class="sev-group">
+              <div class="sev-header" style="color:#d32f2f">
+                ▶ BLOCKER <span class="sev-count">(1)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>JWT secret keys should not be disclosed, either in code or in configuration files.</td>
+                  <td class="mono">LecturaIA.API/Services/AuthService.cs</td>
+                  <td class="num">344</td>
+                  <td class="num">30min</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="sev-group">
+              <div class="sev-header" style="color:#f9a825">
+                ▶ MEDIUM <span class="sev-count">(1)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>&quot;password&quot; detected here, make sure this is not a hard-coded credential.</td>
+                  <td class="mono">LecturaIA.API/appsettings.json</td>
+                  <td class="num">24</td>
+                  <td class="num">30min</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="sev-group">
+              <div class="sev-header" style="color:#388e3c">
+                ▶ LOW <span class="sev-count">(1)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>Change this code to not log user-controlled data.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">84</td>
+                  <td class="num">30min</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+        </section>
+        <section class="type-section" id="code_smell">
+          <h2>🌿 Code Smell (Mantenibilidad) <span class="type-count">272</span></h2>
+          
+            <div class="sev-group">
+              <div class="sev-header" style="color:#f57c00">
+                ▶ HIGH <span class="sev-count">(11)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>Refactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">61</td>
+                  <td class="num">6min</td>
+                </tr>
+                <tr>
+                  <td class="num">2</td>
+                  <td>Refactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">368</td>
+                  <td class="num">6min</td>
+                </tr>
+                <tr>
+                  <td class="num">3</td>
+                  <td>Refactor this method to reduce its Cognitive Complexity from 24 to the 15 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">552</td>
+                  <td class="num">6min</td>
+                </tr>
+                <tr>
+                  <td class="num">4</td>
+                  <td>Refactor this method to reduce its Cognitive Complexity from 21 to the 15 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">97</td>
+                  <td class="num">6min</td>
+                </tr>
+                <tr>
+                  <td class="num">5</td>
+                  <td>Refactor this method to reduce its Cognitive Complexity from 21 to the 15 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/MetricasController.cs</td>
+                  <td class="num">29</td>
+                  <td class="num">6min</td>
+                </tr>
+                <tr>
+                  <td class="num">6</td>
+                  <td>Refactor this method to reduce its Cognitive Complexity from 26 to the 15 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/MetricasController.cs</td>
+                  <td class="num">195</td>
+                  <td class="num">6min</td>
+                </tr>
+                <tr>
+                  <td class="num">7</td>
+                  <td>Add a nested comment explaining why this method is empty, throw a &#x27;NotSupportedException&#x27; or complete the implementation.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117033549_FixLongitudTextoLength.cs</td>
+                  <td class="num">17</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">8</td>
+                  <td>Add a nested comment explaining why this method is empty, throw a &#x27;NotSupportedException&#x27; or complete the implementation.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20260314005342_InitialCreateDylan.cs</td>
+                  <td class="num">17</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">9</td>
+                  <td>Add a nested comment explaining why this method is empty, throw a &#x27;NotSupportedException&#x27; or complete the implementation.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20260314010407_InitialCreateDylan2.cs</td>
+                  <td class="num">17</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">10</td>
+                  <td>Add a nested comment explaining why this method is empty, throw a &#x27;NotSupportedException&#x27; or complete the implementation.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20260314010540_InitialCreateDylan3.cs</td>
+                  <td class="num">17</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">11</td>
+                  <td>Do not import modules using an absolute path</td>
+                  <td class="mono">LecturaIA.Frontend/src/main.ts</td>
+                  <td class="num">3</td>
+                  <td class="num">5min</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="sev-group">
+              <div class="sev-header" style="color:#f9a825">
+                ▶ MEDIUM <span class="sev-count">(139)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">84</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">2</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">172</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">3</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">332</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">4</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">437</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">5</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">547</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">6</td>
+                  <td>Either remove or fill this block of code.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">169</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">7</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">396</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">8</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">408</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">9</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">77</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">10</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">78</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">11</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">667</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">12</td>
+                  <td>Annotate this method with ProducesResponseType containing the return type for successful responses.</td>
+                  <td class="mono">LecturaIA.API/Controllers/GradosController.cs</td>
+                  <td class="num">22</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">13</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">64</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">14</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">97</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">15</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">171</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">16</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">178</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">17</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">182</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">18</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">189</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">19</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">195</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">20</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">297</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">21</td>
+                  <td>Don&#x27;t use string interpolation in logging message templates.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">303</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">22</td>
+                  <td>Annotate this method with ProducesResponseType containing the return type for successful responses.</td>
+                  <td class="mono">LecturaIA.API/Controllers/PasswordController.cs</td>
+                  <td class="num">57</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">23</td>
+                  <td>Remove this commented out code.</td>
+                  <td class="mono">LecturaIA.API/Data/ApplicationDbContext.cs</td>
+                  <td class="num">35</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">24</td>
+                  <td>Use &#x27;Guid.NewGuid()&#x27; or &#x27;Guid.Empty&#x27; or add arguments to this GUID instantiation.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117040103_UpdateSesionLecturaIdNullable.cs</td>
+                  <td class="num">46</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">25</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/AdminDTOs.cs</td>
+                  <td class="num">19</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">26</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/AdminDTOs.cs</td>
+                  <td class="num">25</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">27</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/AdminDTOs.cs</td>
+                  <td class="num">30</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">28</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">12</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">29</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">31</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">30</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">32</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">31</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">40</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">32</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">64</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">33</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">115</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">34</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">117</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">35</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">244</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">36</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ComprencionLectoraDto.cs</td>
+                  <td class="num">245</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">37</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/ExamenGrupalDto.cs</td>
+                  <td class="num">8</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">38</td>
+                  <td>Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/RegistroEstudianteDto.cs</td>
+                  <td class="num">26</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">39</td>
+                  <td>Remove this commented out code.</td>
+                  <td class="mono">LecturaIA.API/Program.cs</td>
+                  <td class="num">143</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">40</td>
+                  <td>Await RunAsync instead.</td>
+                  <td class="mono">LecturaIA.API/Program.cs</td>
+                  <td class="num">155</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">41</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.API/Services/AdminService.cs</td>
+                  <td class="num">38</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">42</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/AyudaService.cs</td>
+                  <td class="num">23</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">43</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/AyudaService.cs</td>
+                  <td class="num">39</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">44</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">127</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">45</td>
+                  <td>Remove this unused method parameter &#x27;titulo&#x27;.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">139</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">46</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">413</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">47</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">434</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">48</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">499</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">49</td>
+                  <td>Use &#x27;Count&#x27; property here instead.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">242</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">50</td>
+                  <td>Use &#x27;Count&#x27; property here instead.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">243</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">51</td>
+                  <td>Use &#x27;Count&#x27; property here instead.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">244</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">52</td>
+                  <td>Use &#x27;Count&#x27; property here instead.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">245</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">53</td>
+                  <td>Use &#x27;Count&#x27; property here instead.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">246</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">54</td>
+                  <td>Use &#x27;Count&#x27; property here instead.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">246</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">55</td>
+                  <td>Either log this exception and handle it, or rethrow it with some contextual information.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">54</td>
+                  <td class="num">15min</td>
+                </tr>
+                <tr>
+                  <td class="num">56</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">146</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">57</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">177</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">58</td>
+                  <td>&#x27;System.Exception&#x27; should not be thrown by user code.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">186</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">59</td>
+                  <td>Remove this unused method parameter &#x27;titulo&#x27;.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">189</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">60</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/AyudaContextual.tsx</td>
+                  <td class="num">42</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">61</td>
+                  <td>Ambiguous spacing after previous element span</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/AyudaContextual.tsx</td>
+                  <td class="num">62</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">62</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/CambiarPasswordModal.tsx</td>
+                  <td class="num">188</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">63</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/CambiarPasswordModal.tsx</td>
+                  <td class="num">203</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">64</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/CambiarPasswordModal.tsx</td>
+                  <td class="num">242</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">65</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/CambiarPasswordModal.tsx</td>
+                  <td class="num">253</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">66</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/Estudiante/ListaExamenesAsignados.css</td>
+                  <td class="num">29</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">67</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/Estudiante/ListaExamenesAsignados.css</td>
+                  <td class="num">40</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">68</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/Estudiante/ListaExamenesAsignados.css</td>
+                  <td class="num">65</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">69</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/Estudiante/ListaExamenesAsignados.css</td>
+                  <td class="num">199</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">70</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/Estudiante/ListaExamenesAsignados.css</td>
+                  <td class="num">314</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">71</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/Estudiante/ListaExamenesAsignados.tsx</td>
+                  <td class="num">76</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">72</td>
+                  <td>Move this component definition out of the parent component and pass data as props.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasEstudianteModal.tsx</td>
+                  <td class="num">134</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">73</td>
+                  <td>Prefer using an optional chain expression instead, as it&#x27;s more concise and easier to read.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasEstudianteModal.tsx</td>
+                  <td class="num">135</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">74</td>
+                  <td>Move this component definition out of the parent component and pass data as props.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasSalonModal.tsx</td>
+                  <td class="num">113</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">75</td>
+                  <td>Prefer using an optional chain expression instead, as it&#x27;s more concise and easier to read.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasSalonModal.tsx</td>
+                  <td class="num">114</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">76</td>
+                  <td>Move this component definition out of the parent component and pass data as props.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasSalonModal.tsx</td>
+                  <td class="num">174</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">77</td>
+                  <td>Prefer using an optional chain expression instead, as it&#x27;s more concise and easier to read.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasSalonModal.tsx</td>
+                  <td class="num">175</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">78</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiClaseModal.tsx</td>
+                  <td class="num">143</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">79</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiClaseModal.tsx</td>
+                  <td class="num">224</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">80</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">68</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">81</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">77</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">82</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">89</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">83</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">93</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">84</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">97</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">85</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">123</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">86</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">129</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">87</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">135</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">88</td>
+                  <td>Ambiguous spacing after previous element span</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/TutorialInicial.tsx</td>
+                  <td class="num">193</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">89</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/TutorialInicial.tsx</td>
+                  <td class="num">205</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">90</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/VerificacionCodigo.tsx</td>
+                  <td class="num">148</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">91</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/VistaPreviaPreferenciasModal.tsx</td>
+                  <td class="num">107</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">92</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/admin/CodigosDocentes.tsx</td>
+                  <td class="num">139</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">93</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/admin/GestionUsuarios.tsx</td>
+                  <td class="num">198</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">94</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.css</td>
+                  <td class="num">40</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">95</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.css</td>
+                  <td class="num">170</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">96</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.tsx</td>
+                  <td class="num">12</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">97</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.tsx</td>
+                  <td class="num">42</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">98</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.tsx</td>
+                  <td class="num">198</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">99</td>
+                  <td>Ambiguous spacing after previous element span</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.tsx</td>
+                  <td class="num">286</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">100</td>
+                  <td>Ambiguous spacing after previous element span</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearExamenGrupal.tsx</td>
+                  <td class="num">291</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">101</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.css</td>
+                  <td class="num">109</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">102</td>
+                  <td>Text does not meet the minimal contrast requirement with its background.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.css</td>
+                  <td class="num">282</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">103</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.tsx</td>
+                  <td class="num">25</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">104</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.tsx</td>
+                  <td class="num">201</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">105</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.tsx</td>
+                  <td class="num">215</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">106</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.tsx</td>
+                  <td class="num">229</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">107</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AdminDashboard.tsx</td>
+                  <td class="num">290</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">108</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AdminDashboard.tsx</td>
+                  <td class="num">359</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">109</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">36</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">110</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">56</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">111</td>
+                  <td>Prefer using an optional chain expression instead, as it&#x27;s more concise and easier to read.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">70</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">112</td>
+                  <td>Prefer `childNode.remove()` over `parentNode.removeChild(childNode)`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">81</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">113</td>
+                  <td>Prefer `childNode.remove()` over `parentNode.removeChild(childNode)`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">94</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">114</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">258</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">115</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">270</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">116</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRespuesta.tsx</td>
+                  <td class="num">238</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">117</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRespuesta.tsx</td>
+                  <td class="num">331</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">118</td>
+                  <td>Remove this commented out code.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioResultados.tsx</td>
+                  <td class="num">82</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">119</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioResultados.tsx</td>
+                  <td class="num">185</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">120</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRevision.tsx</td>
+                  <td class="num">196</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">121</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRevision.tsx</td>
+                  <td class="num">200</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">122</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DashboardAdmin.tsx</td>
+                  <td class="num">270</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">123</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DashboardAdmin.tsx</td>
+                  <td class="num">339</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">124</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteAulasPage.tsx</td>
+                  <td class="num">87</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">125</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteAulasPage.tsx</td>
+                  <td class="num">96</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">126</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteAulasPage.tsx</td>
+                  <td class="num">129</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">127</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteDashboard.tsx</td>
+                  <td class="num">225</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">128</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteDashboard.tsx</td>
+                  <td class="num">234</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">129</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteDashboard.tsx</td>
+                  <td class="num">267</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">130</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteDashboard.tsx</td>
+                  <td class="num">337</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">131</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteDashboard.tsx</td>
+                  <td class="num">344</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">132</td>
+                  <td>A form label must be associated with a control.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DocenteDashboard.tsx</td>
+                  <td class="num">351</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">133</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/EstudianteDashboard.tsx</td>
+                  <td class="num">457</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">134</td>
+                  <td>Extract this nested ternary operation into an independent statement.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/EstudianteDashboard.tsx</td>
+                  <td class="num">642</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">135</td>
+                  <td>Prefer `Number.parseInt` over `parseInt`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/LecturaDetalle.tsx</td>
+                  <td class="num">23</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">136</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/LecturaDetalle.tsx</td>
+                  <td class="num">177</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">137</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/LecturaDetalle.tsx</td>
+                  <td class="num">189</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">138</td>
+                  <td>Do not use Array index in keys</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/LecturaVistaLectura.tsx</td>
+                  <td class="num">208</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">139</td>
+                  <td>Ambiguous spacing after previous element span</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/LecturaVistaLectura.tsx</td>
+                  <td class="num">236</td>
+                  <td class="num">5min</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="sev-group">
+              <div class="sev-header" style="color:#388e3c">
+                ▶ LOW <span class="sev-count">(117)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>Define a constant instead of using this literal &#x27;Token inválido&#x27; 8 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">57</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">2</td>
+                  <td>Define a constant instead of using this literal &#x27;Docente no encontrado&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">66</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">3</td>
+                  <td>Define a constant instead of using this literal &#x27;Datos inválidos&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AuthController.cs</td>
+                  <td class="num">23</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">4</td>
+                  <td>Remove the unused local variable &#x27;resultado&#x27;.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AuthController.cs</td>
+                  <td class="num">186</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">5</td>
+                  <td>Reduce the number of Information logging calls within this code block from 3 to the 2 allowed.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">118</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">6</td>
+                  <td>Handle the exception or explain in a comment why it can be ignored.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">169</td>
+                  <td class="num">1h</td>
+                </tr>
+                <tr>
+                  <td class="num">7</td>
+                  <td>Define a constant instead of using this literal &#x27;evaluado&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">275</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">8</td>
+                  <td>Make &#x27;AdaptarNivelEstudiante&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">483</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">9</td>
+                  <td>Make &#x27;ObtenerMensajeAnimo&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">539</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">10</td>
+                  <td>&quot;StartsWith&quot; overloads that take a &quot;char&quot; should be used</td>
+                  <td class="mono">LecturaIA.API/Controllers/CuestionariosController.cs</td>
+                  <td class="num">591</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">11</td>
+                  <td>Define a constant instead of using this literal &#x27;Usuario no autorizado&#x27; 8 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">46</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">12</td>
+                  <td>Define a constant instead of using this literal &#x27;Completado&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">74</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">13</td>
+                  <td>Define a constant instead of using this literal &#x27;En Progreso&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/ExamenGrupalController.cs</td>
+                  <td class="num">77</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">14</td>
+                  <td>Make &#x27;ObtenerEtiquetaGrado&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Controllers/GradosController.cs</td>
+                  <td class="num">43</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">15</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiante no encontrado&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">45</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">16</td>
+                  <td>Loop should be simplified by calling Select(cuestionario =&gt; cuestionario.Id))</td>
+                  <td class="mono">LecturaIA.API/Controllers/LecturasController.cs</td>
+                  <td class="num">264</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">17</td>
+                  <td>Loop should be simplified by calling Select(sesion =&gt; sesion.Cuestionario))</td>
+                  <td class="mono">LecturaIA.API/Controllers/MetricasController.cs</td>
+                  <td class="num">133</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">18</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiante no encontrado&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Controllers/SesionesLecturaController.cs</td>
+                  <td class="num">49</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">19</td>
+                  <td>Define a constant instead of using this literal &#x27;Usuarios&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251005234302_InitialCreate.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">20</td>
+                  <td>Define a constant instead of using this literal &#x27;SqlServer:Identity&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251005234302_InitialCreate.cs</td>
+                  <td class="num">19</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">21</td>
+                  <td>Define a constant instead of using this literal &#x27;Docentes&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251005234302_InitialCreate.cs</td>
+                  <td class="num">33</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">22</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiantes&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251005234302_InitialCreate.cs</td>
+                  <td class="num">54</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">23</td>
+                  <td>Define a constant instead of using this literal &#x27;CodigosRegistroEstudiante&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251005234302_InitialCreate.cs</td>
+                  <td class="num">85</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">24</td>
+                  <td>Define a constant instead of using this literal &#x27;Usuarios&#x27; 13 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251006071053_AddAdminFeatures.cs</td>
+                  <td class="num">16</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">25</td>
+                  <td>Define a constant instead of using this literal &#x27;datetime2&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251006071053_AddAdminFeatures.cs</td>
+                  <td class="num">17</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">26</td>
+                  <td>Define a constant instead of using this literal &#x27;CodigosRegistroDocente&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251006071053_AddAdminFeatures.cs</td>
+                  <td class="num">52</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">27</td>
+                  <td>Define a constant instead of using this literal &#x27;IX_Estudiantes_CodigoEstudiante&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251006160631_RemoveUniqueIndexFromCodigoEstudiante.cs</td>
+                  <td class="num">14</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">28</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiantes&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251006160631_RemoveUniqueIndexFromCodigoEstudiante.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">29</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiantes&#x27; 15 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">16</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">30</td>
+                  <td>Define a constant instead of using this literal &#x27;CodigosRegistroDocente&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">19</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">31</td>
+                  <td>Define a constant instead of using this literal &#x27;CodigosRegistroEstudiante&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">22</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">32</td>
+                  <td>Define a constant instead of using this literal &#x27;Docentes&#x27; 9 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">34</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">33</td>
+                  <td>Define a constant instead of using this literal &#x27;DocenteId&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">41</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">34</td>
+                  <td>Define a constant instead of using this literal &#x27;Usuarios&#x27; 7 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">50</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">35</td>
+                  <td>Define a constant instead of using this literal &#x27;datetime2&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">58</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">36</td>
+                  <td>Define a constant instead of using this literal &#x27;nvarchar(50)&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012004451_VerificacionEmailYEliminarCodigos.cs</td>
+                  <td class="num">70</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">37</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiantes&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012011620_ActualizarCamposEstudianteDocente.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">38</td>
+                  <td>Define a constant instead of using this literal &#x27;Docentes&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012011620_ActualizarCamposEstudianteDocente.cs</td>
+                  <td class="num">19</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">39</td>
+                  <td>Define a constant instead of using this literal &#x27;nvarchar(50)&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012011620_ActualizarCamposEstudianteDocente.cs</td>
+                  <td class="num">28</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">40</td>
+                  <td>Define a constant instead of using this literal &#x27;CodigosVerificacionLogin&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251012015306_AgregarSistema2FA.cs</td>
+                  <td class="num">22</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">41</td>
+                  <td>Define a constant instead of using this literal &#x27;SesionesLectura&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">42</td>
+                  <td>Define a constant instead of using this literal &#x27;uniqueidentifier&#x27; 9 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">18</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">43</td>
+                  <td>Define a constant instead of using this literal &#x27;datetime2&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">21</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">44</td>
+                  <td>Define a constant instead of using this literal &#x27;Estudiantes&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">32</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">45</td>
+                  <td>Define a constant instead of using this literal &#x27;Cuestionarios&#x27; 8 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">44</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">46</td>
+                  <td>Define a constant instead of using this literal &#x27;nvarchar(20)&#x27; 7 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">53</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">47</td>
+                  <td>Define a constant instead of using this literal &#x27;Preguntas&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">81</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">48</td>
+                  <td>Define a constant instead of using this literal &#x27;ResultadosCuestionarios&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">106</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">49</td>
+                  <td>Define a constant instead of using this literal &#x27;RespuestasEstudiantes&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">143</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">50</td>
+                  <td>Define a constant instead of using this literal &#x27;EstudianteId&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251015051527_AgregarSistemaComprensionLectora.cs</td>
+                  <td class="num">180</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">51</td>
+                  <td>Define a constant instead of using this literal &#x27;Aulas&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251019162708_AgregarSistemaAulas.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">52</td>
+                  <td>Define a constant instead of using this literal &#x27;EstudiantesAulas&#x27; 5 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251019162708_AgregarSistemaAulas.cs</td>
+                  <td class="num">39</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">53</td>
+                  <td>Define a constant instead of using this literal &#x27;decimal(18,2)&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251029170121_CambiarTiemposADecimal.cs</td>
+                  <td class="num">16</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">54</td>
+                  <td>Define a constant instead of using this literal &#x27;ExamenesGrupales&#x27; 7 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251116233049_AddExamenGrupal.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">55</td>
+                  <td>Define a constant instead of using this literal &#x27;nvarchar(20)&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251116233049_AddExamenGrupal.cs</td>
+                  <td class="num">25</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">56</td>
+                  <td>Define a constant instead of using this literal &#x27;datetime2&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251116233049_AddExamenGrupal.cs</td>
+                  <td class="num">28</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">57</td>
+                  <td>Define a constant instead of using this literal &#x27;AsignacionesExamen&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251116233049_AddExamenGrupal.cs</td>
+                  <td class="num">57</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">58</td>
+                  <td>Define a constant instead of using this literal &#x27;EstudianteId&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117035455_MakeEstudianteIdNullableForExams.cs</td>
+                  <td class="num">14</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">59</td>
+                  <td>Define a constant instead of using this literal &#x27;IX_Cuestionarios_SesionLecturaId&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117040103_UpdateSesionLecturaIdNullable.cs</td>
+                  <td class="num">15</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">60</td>
+                  <td>Define a constant instead of using this literal &#x27;Cuestionarios&#x27; 6 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117040103_UpdateSesionLecturaIdNullable.cs</td>
+                  <td class="num">16</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">61</td>
+                  <td>Define a constant instead of using this literal &#x27;SesionLecturaId&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117040103_UpdateSesionLecturaIdNullable.cs</td>
+                  <td class="num">19</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">62</td>
+                  <td>Define a constant instead of using this literal &#x27;uniqueidentifier&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Migrations/20251117040103_UpdateSesionLecturaIdNullable.cs</td>
+                  <td class="num">21</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">63</td>
+                  <td>Remove this empty class, write its code or make it an &quot;interface&quot;.</td>
+                  <td class="mono">LecturaIA.API/Models/DTOs/AyudaDTOs.cs</td>
+                  <td class="num">8</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">64</td>
+                  <td>Make &#x27;GenerarPasswordTemporal&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/AdminService.cs</td>
+                  <td class="num">139</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">65</td>
+                  <td>Define a constant instead of using this literal &#x27;VerificationSettings:TokenExpirationHours&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Services/AuthService.cs</td>
+                  <td class="num">46</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">66</td>
+                  <td>Make &#x27;GenerarCodigoVerificacion&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/AuthService.cs</td>
+                  <td class="num">573</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">67</td>
+                  <td>Make &#x27;GenerarTokenVerificacion&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/AuthService.cs</td>
+                  <td class="num">580</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">68</td>
+                  <td>Reduce the number of Information logging calls within this code block from 6 to the 2 allowed.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">88</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">69</td>
+                  <td>Make &#x27;ConstruirPromptCuestionario&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">137</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">70</td>
+                  <td>Refactor your code not to use hardcoded absolute paths or URIs.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">352</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">71</td>
+                  <td>Make &#x27;ParsearEvaluacionRespuestaAbierta&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">503</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">72</td>
+                  <td>Make &#x27;LimpiarTextoRespuesta&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">517</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">73</td>
+                  <td>Make &#x27;GenerarRetroalimentacionPorDefecto&#x27; a static method.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">537</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">74</td>
+                  <td>Refactor your code not to use hardcoded absolute paths or URIs.</td>
+                  <td class="mono">LecturaIA.API/Services/CuestionarioIAService.cs</td>
+                  <td class="num">629</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">75</td>
+                  <td>Reduce the number of Information logging calls within this code block from 3 to the 2 allowed.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">52</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">76</td>
+                  <td>Remove the unused local variable &#x27;parametrosLectura&#x27;.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">54</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">77</td>
+                  <td>Define a constant instead of using this literal &#x27;Completado&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">237</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">78</td>
+                  <td>Use &#x27;.Any()&#x27; to test whether this &#x27;IEnumerable&lt;LecturaIA.API.Models.DTOs.ResultadoEstudianteDto&gt;&#x27; is empty or not.</td>
+                  <td class="mono">LecturaIA.API/Services/ExamenGrupalService.cs</td>
+                  <td class="num">245</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">79</td>
+                  <td>Refactor your code not to use hardcoded absolute paths or URIs.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">119</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">80</td>
+                  <td>Define a constant instead of using this literal &#x27;Authorization&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">130</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">81</td>
+                  <td>Define a constant instead of using this literal &#x27;application/json&#x27; 4 times.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">131</td>
+                  <td class="num">4min</td>
+                </tr>
+                <tr>
+                  <td class="num">82</td>
+                  <td>Reduce the number of Information logging calls within this code block from 5 to the 2 allowed.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">193</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">83</td>
+                  <td>Refactor your code not to use hardcoded absolute paths or URIs.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">202</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">84</td>
+                  <td>Refactor your code not to use hardcoded absolute paths or URIs.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">322</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">85</td>
+                  <td>Refactor your code not to use hardcoded absolute paths or URIs.</td>
+                  <td class="mono">LecturaIA.API/Services/LecturaIAService.cs</td>
+                  <td class="num">404</td>
+                  <td class="num">20min</td>
+                </tr>
+                <tr>
+                  <td class="num">86</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/AyudaContextual.tsx</td>
+                  <td class="num">12</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">87</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/CambiarPasswordModal.tsx</td>
+                  <td class="num">10</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">88</td>
+                  <td>Prefer `globalThis` over `window`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/CambiarPasswordModal.tsx</td>
+                  <td class="num">68</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">89</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/EncuestaGuiadaModal.tsx</td>
+                  <td class="num">18</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">90</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasEstudianteModal.tsx</td>
+                  <td class="num">12</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">91</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MetricasSalonModal.tsx</td>
+                  <td class="num">12</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">92</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiClaseModal.tsx</td>
+                  <td class="num">9</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">93</td>
+                  <td>Prefer `String#replaceAll()` over `String#replace()`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiClaseModal.tsx</td>
+                  <td class="num">232</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">94</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/MiPerfilModal.tsx</td>
+                  <td class="num">9</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">95</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/TutorialInicial.tsx</td>
+                  <td class="num">18</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">96</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/VerificacionCodigo.tsx</td>
+                  <td class="num">10</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">97</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/VistaPreviaPreferenciasModal.tsx</td>
+                  <td class="num">11</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">98</td>
+                  <td>Unexpected negated condition.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/admin/GestionUsuarios.tsx</td>
+                  <td class="num">212</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">99</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/CrearAulaModal.tsx</td>
+                  <td class="num">17</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">100</td>
+                  <td>Mark the props of the component as read-only.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ListaExamenesAula.tsx</td>
+                  <td class="num">21</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">101</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/components/docente/ResultadosExamenGrupal.tsx</td>
+                  <td class="num">25</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">102</td>
+                  <td>Unexpected negated condition.</td>
+                  <td class="mono">LecturaIA.Frontend/src/config/api.ts</td>
+                  <td class="num">3</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">103</td>
+                  <td>Unexpected negated condition.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AdminDashboard.tsx</td>
+                  <td class="num">312</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">104</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">36</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">105</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">56</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">106</td>
+                  <td>The signature &#x27;(commandId: string, showUI?: boolean | undefined, value?: string | undefined): boolean&#x27; of &#x27;document.execCommand&#x27; is deprecated.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">80</td>
+                  <td class="num">15min</td>
+                </tr>
+                <tr>
+                  <td class="num">107</td>
+                  <td>The signature &#x27;(commandId: string, showUI?: boolean | undefined, value?: string | undefined): boolean&#x27; of &#x27;document.execCommand&#x27; is deprecated.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">93</td>
+                  <td class="num">15min</td>
+                </tr>
+                <tr>
+                  <td class="num">108</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">258</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">109</td>
+                  <td>useState call is not destructured into value + setter pair</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioGeneracion.tsx</td>
+                  <td class="num">12</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">110</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioGeneracion.tsx</td>
+                  <td class="num">29</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">111</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRespuesta.tsx</td>
+                  <td class="num">53</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">112</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRespuesta.tsx</td>
+                  <td class="num">114</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">113</td>
+                  <td>Use `new Array()` instead of `Array()`.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioResultados.tsx</td>
+                  <td class="num">183</td>
+                  <td class="num">5min</td>
+                </tr>
+                <tr>
+                  <td class="num">114</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/CuestionarioRevision.tsx</td>
+                  <td class="num">28</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">115</td>
+                  <td>Unexpected negated condition.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/DashboardAdmin.tsx</td>
+                  <td class="num">292</td>
+                  <td class="num">2min</td>
+                </tr>
+                <tr>
+                  <td class="num">116</td>
+                  <td>This assertion is unnecessary since the receiver accepts the original type of the expression.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/RecuperarPassword.tsx</td>
+                  <td class="num">53</td>
+                  <td class="num">1min</td>
+                </tr>
+                <tr>
+                  <td class="num">117</td>
+                  <td>Handle this exception or don&#x27;t catch it at all.</td>
+                  <td class="mono">LecturaIA.Frontend/src/services/lecturaService.ts</td>
+                  <td class="num">150</td>
+                  <td class="num">1h</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="sev-group">
+              <div class="sev-header" style="color:#0288d1">
+                ▶ INFO <span class="sev-count">(5)</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>#</th><th>Mensaje</th><th>Archivo</th><th>Linea</th><th>Esfuerzo</th></tr></thead>
+                  <tbody>
+                <tr>
+                  <td class="num">1</td>
+                  <td>Complete the task associated to this &#x27;TODO&#x27; comment.</td>
+                  <td class="mono">LecturaIA.API/Controllers/AulasController.cs</td>
+                  <td class="num">491</td>
+                  <td class="num">0min</td>
+                </tr>
+                <tr>
+                  <td class="num">2</td>
+                  <td>Complete the task associated to this &#x27;TODO&#x27; comment.</td>
+                  <td class="mono">LecturaIA.API/Data/ApplicationDbContext.cs</td>
+                  <td class="num">129</td>
+                  <td class="num">0min</td>
+                </tr>
+                <tr>
+                  <td class="num">3</td>
+                  <td>Complete the task associated to this &#x27;TODO&#x27; comment.</td>
+                  <td class="mono">LecturaIA.API/Services/AdminService.cs</td>
+                  <td class="num">111</td>
+                  <td class="num">0min</td>
+                </tr>
+                <tr>
+                  <td class="num">4</td>
+                  <td>Complete the task associated to this &quot;TODO&quot; comment.</td>
+                  <td class="mono">LecturaIA.Frontend/src/pages/AulaDetalleDocente.tsx</td>
+                  <td class="num">86</td>
+                  <td class="num">0min</td>
+                </tr>
+                <tr>
+                  <td class="num">5</td>
+                  <td>Complete the task associated to this &quot;TODO&quot; comment.</td>
+                  <td class="mono">LecturaIA.Frontend/src/services/cuestionarioService.ts</td>
+                  <td class="num">82</td>
+                  <td class="num">0min</td>
+                </tr></tbody>
+                </table>
+              </div>
+            </div>
+        </section>
+
+</div>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id], h2[id]');
+  const navLinks = document.querySelectorAll('.nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.borderColor = a.getAttribute('href') === '#'+current ? '#58a6ff' : 'transparent';
+      a.style.color = a.getAttribute('href') === '#'+current ? '#e6edf3' : '';
+    });
+  });
+</script>
+
+</body>
+</html>
