@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../config/api';
 import {
   Box,
   Container,
@@ -12,8 +12,6 @@ import {
   Divider
 } from '@mui/material';
 import { PlayArrow, Send, ChevronLeft } from '@mui/icons-material';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
 
 interface AsignacionExamen {
   id: number;
@@ -69,10 +67,7 @@ export default function RealizarExamenGrupal() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/examengrupales/asignacion/${asignacionId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/examengrupales/asignacion/${asignacionId}`);
       setAsignacion(response.data);
 
       // Si ya está en progreso, cargar el cuestionario personal del estudiante
@@ -94,10 +89,7 @@ export default function RealizarExamenGrupal() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API_URL}/api/examengrupales/iniciar/${asignacionId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.post(`/examengrupales/iniciar/${asignacionId}`, {});
       setSesionLecturaId(response.data.sesionLecturaId);
       setCuestionarioId(response.data.cuestionarioId);
       setVistaActual('lectura');
@@ -114,11 +106,9 @@ export default function RealizarExamenGrupal() {
       try {
         // Actualizar tiempo de lectura en la sesión
         const tiempoMinutos = tiempoLectura / 60;
-        const token = localStorage.getItem('token');
-        await axios.patch(
-          `${API_URL}/api/sesioneslectura/${sesionLecturaId}/tiempo`,
-          { tiempoLecturaMinutos: tiempoMinutos },
-          { headers: { Authorization: `Bearer ${token}` } }
+        await api.patch(
+          `/sesioneslectura/${sesionLecturaId}/tiempo`,
+          { tiempoLecturaMinutos: tiempoMinutos }
         );
       } catch (error) {
         console.error('Error al actualizar tiempo de lectura:', error);

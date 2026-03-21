@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../config/api';
+import api from '../../config/api';
 
 interface CodigoEstudiante {
   id: number;
@@ -19,10 +18,7 @@ export default function CodigosEstudiantes() {
 
   const cargarCodigos = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/docente/codigos-estudiantes`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/docente/codigos-estudiantes');
       setCodigos(response.data.data);
     } catch (err: any) {
       console.error('Error al cargar códigos:', err);
@@ -38,11 +34,9 @@ export default function CodigosEstudiantes() {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/docente/codigos-estudiantes/generar`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post(
+        '/docente/codigos-estudiantes/generar',
+        {}
       );
       setCodigos([response.data.data, ...codigos]);
     } catch (err: any) {
@@ -55,11 +49,9 @@ export default function CodigosEstudiantes() {
 
   const toggleActivo = async (id: number) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_URL}/api/docente/codigos-estudiantes/${id}/toggle-activo`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.put(
+        `/docente/codigos-estudiantes/${id}/toggle-activo`,
+        {}
       );
       await cargarCodigos();
     } catch (err) {

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService, type RegistroEstudianteDto, type GradoOption } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 
 export default function EstudianteAuth() {
+  const { login } = useAuth();
   const [modo, setModo] = useState<'login' | 'registro'>('login');
   const [grados, setGrados] = useState<GradoOption[]>([]);
   const [registroExitoso, setRegistroExitoso] = useState(false);
@@ -35,8 +37,20 @@ export default function EstudianteAuth() {
       const resultado = await authService.login(formDataLogin);
       if ('requiereVerificacion' in resultado) { setError('Este acceso es solo para estudiantes'); return; }
       if (resultado.tipoUsuario !== 'Estudiante') { setError('Este acceso es solo para estudiantes'); return; }
-      authService.guardarSesion(resultado);
-      navigate('/estudiante/dashboard');
+      
+      // Adaptar respuesta del backend al formato esperado por el frontend
+      // El backend devuelve 'fechaExpiracion' pero el frontend espera 'expiracion'
+      const usuarioAdaptado = {
+        ...resultado,
+        // @ts-ignore - Propiedad dinámica
+        expiracion: resultado.fechaExpiracion || (resultado as any).expiracion || '' // Fallback
+      };
+      
+      console.log('Login exitoso. Usuario adaptado:', usuarioAdaptado);
+      login(usuarioAdaptado as any); // Usa el contexto para guardar sesión
+      
+      // Aseguramos que la navegación espere un frame para que el contexto se actualice
+      setTimeout(() => navigate('/estudiante/dashboard'), 50);
     } catch (err: any) {
       if (err.response?.status === 403 && err.response?.data?.cuentaSuspendida) {
         setError('Tu cuenta ha sido suspendida. Contacta al administrador para más información.');

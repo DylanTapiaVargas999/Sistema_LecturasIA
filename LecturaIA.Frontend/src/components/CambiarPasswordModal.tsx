@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { passwordService } from '../services/passwordService';
 import type { ValidacionPasswordDto } from '../services/passwordService';
+import { useAuth } from '../hooks/useAuth';
 
 interface CambiarPasswordModalProps {
   isOpen: boolean;
@@ -8,6 +10,8 @@ interface CambiarPasswordModalProps {
 }
 
 export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswordModalProps) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [passwordActual, setPasswordActual] = useState('');
   const [nuevaPassword, setNuevaPassword] = useState('');
   const [confirmarPassword, setConfirmarPassword] = useState('');
@@ -43,31 +47,22 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
       }, 1000);
       return () => clearTimeout(timer);
     } else if (showSuccess && countdown === 0) {
-      // Obtener tipo de usuario antes de cerrar sesión
-      const userStr = localStorage.getItem('user');
+      // Determinar redirección
       let redirectUrl = '/';
       
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          if (user.tipoUsuario === 'Estudiante') {
-            redirectUrl = '/estudiante';
-          } else if (user.tipoUsuario === 'Docente') {
-            redirectUrl = '/docente';
-          } else if (user.tipoUsuario === 'Administrador') {
-            redirectUrl = '/docente'; // Admin usa la misma ruta de docente
-          }
-        } catch (err) {
-          console.error('Error parsing user:', err);
+      if (user) {
+        if (user.tipoUsuario === 'Estudiante') {
+          redirectUrl = '/estudiante';
+        } else if (user.tipoUsuario === 'Docente' || user.tipoUsuario === 'Administrador') {
+          redirectUrl = '/docente'; 
         }
       }
       
       // Cerrar sesión y redirigir
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = redirectUrl;
+      logout();
+      navigate(redirectUrl);
     }
-  }, [showSuccess, countdown]);
+  }, [showSuccess, countdown, user, logout, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

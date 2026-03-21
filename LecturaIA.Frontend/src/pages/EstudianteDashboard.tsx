@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import CambiarPasswordModal from '../components/CambiarPasswordModal';
 import MiPerfilModal from '../components/MiPerfilModal';
 import MiClaseModal from '../components/MiClaseModal';
@@ -8,13 +9,12 @@ import VistaPreviaPreferenciasModal from '../components/VistaPreviaPreferenciasM
 import AyudaContextual from '../components/AyudaContextual';
 import TutorialInicial from '../components/TutorialInicial';
 import { lecturaService, type LecturaLista } from '../services/lecturaService';
-import { ayudaService } from '../services/ayudaService';
 import { contenidoAyuda, tutorialEstudiante } from '../data/contenidoAyuda';
 
 type TabType = 'lista' | 'favoritas';
 
 export default function EstudianteDashboard() {
-  const [usuario, setUsuario] = useState<any>(null);
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPerfilModal, setShowPerfilModal] = useState(false);
   const [showClaseModal, setShowClaseModal] = useState(false);
@@ -39,29 +39,29 @@ export default function EstudianteDashboard() {
   const [mostrarTutorial, setMostrarTutorial] = useState(false);
   const [cargandoTutorial, setCargandoTutorial] = useState(true);
 
-  // Cargar usuario y lecturas
+  // Cargar lecturas y verificar sesión
   useEffect(() => {
-    const user = localStorage.getItem('userData');
-    if (!user) {
+    if (authLoading) return;
+
+    if (!isAuthenticated || !user) {
       navigate('/estudiante');
       return;
     }
 
-    const userData = JSON.parse(user);
-    if (userData.tipoUsuario !== 'Estudiante') {
+    if (user.tipoUsuario !== 'Estudiante') {
       navigate('/');
       return;
     }
 
-    setUsuario(userData);
     cargarLecturas();
-    verificarPrimeraSesion();
-  }, [navigate]);
+    // verificarPrimeraSesion(); // TODO: Necesita implementarse correctamente con API real
+    setCargandoTutorial(false); // Deshabilitamos temporalmente la verificación de tutorial
+  }, [user, isAuthenticated, authLoading, navigate]);
 
   // Recargar lecturas cuando el usuario regresa a esta página
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      if (!document.hidden && isAuthenticated) {
         cargarLecturas();
       }
     };
@@ -75,9 +75,9 @@ export default function EstudianteDashboard() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', cargarLecturas);
     };
-  }, []);
+  }, [isAuthenticated]);
 
-  const verificarPrimeraSesion = async () => {
+  /* const verificarPrimeraSesion = async () => {
     try {
       const estado = await ayudaService.obtenerEstadoTutorial();
       if (estado.primeraSesion) {
@@ -88,23 +88,29 @@ export default function EstudianteDashboard() {
     } finally {
       setCargandoTutorial(false);
     }
-  };
+  }; */
 
   const cargarLecturas = async () => {
     try {
       setIsLoadingLecturas(true);
       const lecturasData = await lecturaService.obtenerLecturas();
-      setLecturas(lecturasData);
+      // Asegurarse de que sea un array
+      if (Array.isArray(lecturasData)) {
+        setLecturas(lecturasData);
+      } else {
+        console.error('Datos de lecturas inválidos:', lecturasData);
+        setLecturas([]); // Fallback a array vacío
+      }
     } catch (error) {
       console.error('Error al cargar lecturas:', error);
+      setLecturas([]);
     } finally {
       setIsLoadingLecturas(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
+    logout();
     navigate('/estudiante');
   };
 
@@ -172,13 +178,13 @@ export default function EstudianteDashboard() {
   };
 
   // Filtrar lecturas según búsqueda, filtros y tab activa
-  const lecturasFiltradas = lecturas.filter(lectura => {
+  const lecturasFiltradas = Array.isArray(lecturas) ? lecturas.filter(lectura => {
     const matchSearch = lectura.titulo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchTipo = filterTipo === 'todos' || lectura.tipoLectura === filterTipo;
     const matchLongitud = filterNivel === 'todos' || lectura.longitud === filterNivel;
     const matchTab = activeTab === 'lista' || (activeTab === 'favoritas' && lectura.esFavorita);
     return matchSearch && matchTipo && matchLongitud && matchTab;
-  });
+  }) : [];
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
@@ -206,10 +212,42 @@ export default function EstudianteDashboard() {
     }
   };
 
-  if (!usuario) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-lg text-gray-600">Cargando...</div>
+        <div className="text-lg text-gray-600">Cargando sesión...</div>
+      </div>
+    );
+  }
+
+  // Verificación robusta del usuario y su rol
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+        <div className="text-xl text-red-600 font-semibold mb-2">No se ha detectado un usuario activo.</div>
+        <div className="text-gray-600 mb-4">Redirigiendo al inicio de sesión...</div>
+        <button onClick={() => navigate('/estudiante')} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Ir a Iniciar Sesión
+        </button>
+      </div>
+    );
+  }
+
+  // Normalización para verificación de rol (Manejo de mayúsculas/minúsculas o propiedades alternativas)
+  // @ts-ignore - Soporte para posibles inconsistencias del backend
+  const userRole = user.tipoUsuario || user.TipoUsuario || user.role || '';
+  
+  if (userRole !== 'Estudiante') {
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Acceso Denegado</h2>
+        <p className="text-gray-700 mb-4">
+          Tu usuario ({user.nombreCompleto}) tiene el rol: <strong>{userRole}</strong>
+        </p>
+        <p className="text-gray-600 mb-6">Esta página es exclusiva para Estudiantes.</p>
+        <button onClick={handleLogout} className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          Cerrar Sesión
+        </button>
       </div>
     );
   }
@@ -248,7 +286,7 @@ export default function EstudianteDashboard() {
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span>{usuario.nombreCompleto}</span>
+                <span>{user.nombreCompleto}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -812,7 +850,7 @@ export default function EstudianteDashboard() {
       )}
 
       {/* Ayuda Contextual */}
-      {!cargandoTutorial && !mostrarTutorial && (
+      {!cargandoTutorial && !mostrarTutorial && contenidoAyuda?.estudianteDashboard && (
         <AyudaContextual
           pantalla="Dashboard Estudiante"
           contenido={contenidoAyuda.estudianteDashboard}
@@ -821,7 +859,7 @@ export default function EstudianteDashboard() {
       )}
 
       {/* Tutorial Inicial */}
-      {mostrarTutorial && (
+      {mostrarTutorial && tutorialEstudiante && (
         <TutorialInicial
           pasos={tutorialEstudiante}
           onCompletar={() => setMostrarTutorial(false)}

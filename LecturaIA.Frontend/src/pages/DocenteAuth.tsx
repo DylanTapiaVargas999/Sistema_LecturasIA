@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { authService, type RegistroDocenteDto } from '../services/authService';
+import { authService, type RegistroDocenteDto, type AuthResponseDto } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 import VerificacionCodigo from '../components/VerificacionCodigo';
 
 export default function DocenteAuth() {
+  const { login } = useAuth();
   const [modo, setModo] = useState<'login' | 'registro'>('login');
   const [requiereVerificacion, setRequiereVerificacion] = useState(false);
   const [emailVerificacion, setEmailVerificacion] = useState('');
@@ -36,31 +38,43 @@ export default function DocenteAuth() {
         setError('Este acceso es solo para docentes');
         return;
       }
-      authService.guardarSesion(resultado);
+      login(resultado as AuthResponseDto);
       if (resultado.tipoUsuario === 'Administrador') navigate('/admin');
       else navigate('/docente/dashboard');
     } catch (err: any) {
+      console.error('Login error:', err);
       if (err.response?.status === 403 && err.response?.data?.cuentaSuspendida) {
         setError('Tu cuenta ha sido suspendida. Contacta al administrador para más información.');
       } else {
-        setError(err.response?.data?.mensaje || 'Correo o contraseña incorrectos');
+        // Mejor manejo de errores
+        const msg = err.response?.data?.mensaje || err.response?.data || 'Correo o contraseña incorrectos';
+        setError(typeof msg === 'string' ? msg : 'Error al iniciar sesión');
       }
     } finally { setLoading(false); }
   };
 
   const handleRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!aceptaPoliticas) { setError('Debes aceptar las políticas de privacidad para continuar'); return; }
     if (formDataRegistro.password !== formDataRegistro.confirmarPassword) { setError('Las contraseñas no coinciden'); return; }
     if (formDataRegistro.password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres'); return; }
+    
     setLoading(true);
     setError('');
+    
     try {
       await authService.registrarDocente(formDataRegistro);
       setEmailRegistrado(formDataRegistro.email);
       setRegistroExitoso(true);
     } catch (err: any) {
-      setError(err.response?.data?.mensaje || 'Error en el registro');
+      console.error('Registro error:', err);
+      let mensaje = 'Error en el registro';
+      if (err.response?.data?.mensaje) mensaje = err.response.data.mensaje;
+      else if (typeof err.response?.data === 'string') mensaje = err.response.data;
+      else if (err.request && !err.response) mensaje = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
+      
+      setError(mensaje);
     } finally { setLoading(false); }
   };
 

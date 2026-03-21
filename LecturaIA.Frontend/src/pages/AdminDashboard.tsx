@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import AyudaContextual from '../components/AyudaContextual';
 import TutorialInicial from '../components/TutorialInicial';
 import { adminService, type UsuarioAdmin, type EstadisticasGenerales } from '../services/adminService';
@@ -7,6 +8,7 @@ import { ayudaService } from '../services/ayudaService';
 import { contenidoAyuda, tutorialAdmin } from '../data/contenidoAyuda';
 
 export default function AdminDashboard() {
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>([]);
   const [usuariosFiltrados, setUsuariosFiltrados] = useState<UsuarioAdmin[]>([]);
@@ -27,9 +29,21 @@ export default function AdminDashboard() {
   const [cargandoTutorial, setCargandoTutorial] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!isAuthenticated || !user) {
+      navigate('/docente'); // Admin login is through Docente page for now
+      return;
+    }
+
+    if (user.tipoUsuario !== 'Administrador') {
+      navigate('/');
+      return;
+    }
+
     cargarDatos();
     verificarPrimeraSesion();
-  }, []);
+  }, [isAuthenticated, user, authLoading, navigate]);
 
   const verificarPrimeraSesion = async () => {
     try {
@@ -132,8 +146,7 @@ export default function AdminDashboard() {
   };
 
   const handleCerrarSesion = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     navigate('/docente');
   };
 

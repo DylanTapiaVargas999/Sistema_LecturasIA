@@ -1,15 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../config/api';
-
-interface Estadisticas {
-  totalUsuarios: number;
-  totalDocentes: number;
-  totalEstudiantes: number;
-  usuariosSuspendidos: number;
-  codigosDocentesActivos: number;
-  codigosDocentesUsados: number;
-}
+import { adminService, type EstadisticasGenerales as Estadisticas } from '../../services/adminService';
 
 export default function EstadisticasAdmin() {
   const [estadisticas, setEstadisticas] = useState<Estadisticas | null>(null);
@@ -21,11 +11,8 @@ export default function EstadisticasAdmin() {
 
   const cargarEstadisticas = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/admin/estadisticas`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setEstadisticas(response.data);
+      const data = await adminService.obtenerEstadisticas();
+      setEstadisticas(data);
     } catch (error) {
       console.error('Error al cargar estadísticas:', error);
     } finally {

@@ -1,48 +1,21 @@
-import axios from 'axios';
-import { API_URL } from '../config/api';
+import api from '../config/api';
+import type { 
+  LoginDto, 
+  RegistroEstudianteDto, 
+  RegistroDocenteDto, 
+  AuthResponseDto, 
+  LoginRequiere2FADto, 
+  GradoOption 
+} from '../types/auth.types';
 
-// ==================== INTERFACES ====================
-
-export interface LoginDto {
-  email: string;
-  password: string;
-}
-
-export interface RegistroEstudianteDto {
-  email: string;
-  password: string;
-  confirmarPassword: string;
-  nombreCompleto: string;
-  grado: number; // 4, 5 o 6
-  edad: number;
-}
-
-export interface RegistroDocenteDto {
-  email: string;
-  password: string;
-  confirmarPassword: string;
-  nombreCompleto: string;
-}
-
-export interface AuthResponseDto {
-  token: string;
-  tipoUsuario: 'Estudiante' | 'Docente' | 'Administrador';
-  nombreCompleto: string;
-  email: string;
-  expiracion: string;
-}
-
-export interface LoginRequiere2FADto {
-  requiereVerificacion: boolean;
-  mensaje: string;
-  email: string;
-  tiempoExpiracionMinutos: number;
-}
-
-export interface GradoOption {
-  value: number;
-  label: string;
-}
+export type { 
+  LoginDto, 
+  RegistroEstudianteDto, 
+  RegistroDocenteDto, 
+  AuthResponseDto, 
+  LoginRequiere2FADto, 
+  GradoOption 
+};
 
 // ==================== SERVICIO DE AUTENTICACIÓN ====================
 
@@ -50,19 +23,19 @@ class AuthService {
   // ===== REGISTRO =====
   
   async registrarEstudiante(datos: RegistroEstudianteDto): Promise<{ mensaje: string; email: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/registro/estudiante`, datos);
+    const response = await api.post('/auth/registro/estudiante', datos);
     return response.data;
   }
 
   async registrarDocente(datos: RegistroDocenteDto): Promise<{ mensaje: string; email: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/registro/docente`, datos);
+    const response = await api.post('/auth/registro/docente', datos);
     return response.data;
   }
 
   // ===== LOGIN =====
   
   async login(datos: LoginDto): Promise<AuthResponseDto | LoginRequiere2FADto> {
-    const response = await axios.post(`${API_URL}/api/auth/login`, datos);
+    const response = await api.post('/auth/login', datos);
     
     // Si retorna requiereVerificacion, es un docente que necesita 2FA
     if (response.data.requiereVerificacion) {
@@ -70,30 +43,35 @@ class AuthService {
     }
     
     // Si no, es login exitoso directo (estudiante o después de 2FA)
-    return response.data.data as AuthResponseDto;
+    // Verificamos si la respuesta viene envuelta en 'data' o es directa
+    const responseData = response.data;
+    // @ts-ignore - Verificación dinámica en runtime
+    const authData = responseData.data || responseData;
+    
+    return authData as AuthResponseDto;
   }
 
   // ===== VERIFICACIÓN EMAIL =====
   
   async verificarEmail(token: string): Promise<{ mensaje: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/verificar-email`, { token });
+    const response = await api.post('/auth/verificar-email', { token });
     return response.data;
   }
 
   async reenviarVerificacion(email: string): Promise<{ mensaje: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/reenviar-verificacion`, { email });
+    const response = await api.post('/auth/reenviar-verificacion', { email });
     return response.data;
   }
 
   // ===== RECUPERACIÓN PASSWORD =====
   
   async solicitarRecuperacion(email: string): Promise<{ mensaje: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/solicitar-recuperacion`, { email });
+    const response = await api.post('/auth/solicitar-recuperacion', { email });
     return response.data;
   }
 
   async restablecerPassword(token: string, nuevaPassword: string, confirmarPassword: string): Promise<{ mensaje: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/restablecer-password`, {
+    const response = await api.post('/auth/restablecer-password', {
       token,
       nuevaPassword,
       confirmarPassword
@@ -104,7 +82,7 @@ class AuthService {
   // ===== DOBLE AUTENTICACIÓN (2FA) =====
   
   async verificarCodigoLogin(email: string, codigo: string): Promise<AuthResponseDto> {
-    const response = await axios.post(`${API_URL}/api/auth/verificar-codigo-login`, {
+    const response = await api.post('/auth/verificar-codigo-login', {
       email,
       codigo
     });
@@ -112,14 +90,14 @@ class AuthService {
   }
 
   async reenviarCodigoLogin(email: string): Promise<{ mensaje: string }> {
-    const response = await axios.post(`${API_URL}/api/auth/reenviar-codigo-login`, { email });
+    const response = await api.post('/auth/reenviar-codigo-login', { email });
     return response.data;
   }
 
   // ===== GRADOS DISPONIBLES =====
   
   async obtenerGrados(): Promise<GradoOption[]> {
-    const response = await axios.get(`${API_URL}/api/grados`);
+    const response = await api.get('/grados');
     return response.data;
   }
 
@@ -137,7 +115,15 @@ class AuthService {
 
   obtenerUsuario(): AuthResponseDto | null {
     const userData = localStorage.getItem('userData');
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    try {
+      return JSON.parse(userData);
+    } catch (e) {
+      console.error('Error parsing user data from localStorage', e);
+      // Data corrupta, limpiamos
+      this.cerrarSesion();
+      return null;
+    }
   }
 
   estaAutenticado(): boolean {

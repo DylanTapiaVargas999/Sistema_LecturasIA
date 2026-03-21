@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 
 interface VerificacionCodigoProps {
   email: string;
@@ -8,6 +9,7 @@ interface VerificacionCodigoProps {
 }
 
 export default function VerificacionCodigo({ email, onVolver }: VerificacionCodigoProps) {
+  const { login } = useAuth();
   const [codigo, setCodigo] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -90,10 +92,10 @@ export default function VerificacionCodigo({ email, onVolver }: VerificacionCodi
     try {
       const authData = await authService.verificarCodigoLogin(email, codigoFinal);
       
-      // Guardar sesión
-      authService.guardarSesion(authData);
+      // Guardar sesión usando el hook
+      login(authData);
       
-      // Redirigir al dashboard
+      // La redirección ocurrirá automáticamente por las rutas protegidas, o aquí:
       navigate('/docente/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.mensaje || 'Código inválido o expirado');

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import CambiarPasswordModal from '../components/CambiarPasswordModal';
 import CrearAulaModal from '../components/docente/CrearAulaModal';
 import AyudaContextual from '../components/AyudaContextual';
 import TutorialInicial from '../components/TutorialInicial';
 import { aulasService, type AulaDetalle } from '../services/aulasService';
-import { ayudaService } from '../services/ayudaService';
 import { contenidoAyuda, tutorialDocente } from '../data/contenidoAyuda';
 
 type TabType = 'aulas' | 'perfil';
 
 export default function DocenteDashboard() {
-  const [usuario, setUsuario] = useState<any>(null);
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showCrearAulaModal, setShowCrearAulaModal] = useState(false);
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
@@ -25,24 +25,22 @@ export default function DocenteDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = localStorage.getItem('userData');
-    if (!user) {
+    if (authLoading) return;
+
+    if (!isAuthenticated || !user) {
       navigate('/docente');
       return;
     }
 
-    const userData = JSON.parse(user);
-    if (userData.tipoUsuario !== 'Docente') {
+    if (user.tipoUsuario !== 'Docente') {
       navigate('/');
       return;
     }
 
-    setUsuario(userData);
-    cargarAulas();
     verificarPrimeraSesion();
-  }, [navigate]);
+  }, [user, isAuthenticated, authLoading, navigate]);
 
-  const verificarPrimeraSesion = async () => {
+  /* const verificarPrimeraSesion = async () => {
     try {
       const estado = await ayudaService.obtenerEstadoTutorial();
       if (estado.primeraSesion) {
@@ -53,7 +51,9 @@ export default function DocenteDashboard() {
     } finally {
       setCargandoTutorial(false);
     }
-  };
+  }; */
+
+  const verificarPrimeraSesion = () => { setCargandoTutorial(false); };
 
   const cargarAulas = async () => {
     try {
@@ -70,8 +70,7 @@ export default function DocenteDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
+    logout();
     navigate('/docente');
   };
 
@@ -102,12 +101,16 @@ export default function DocenteDashboard() {
     alert(`Código ${codigo} copiado al portapapeles`);
   };
 
-  if (!usuario) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-lg text-gray-600">Cargando...</div>
+        <div className="text-lg text-gray-600">Cargando sesión...</div>
       </div>
     );
+  }
+
+  if (!user || user.tipoUsuario !== 'Docente') {
+    return null;
   }
 
   return (
@@ -132,7 +135,7 @@ export default function DocenteDashboard() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span>{usuario.nombreCompleto}</span>
+                <span>{user.nombreCompleto}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -336,14 +339,14 @@ export default function DocenteDashboard() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800">
-                    {usuario.nombreCompleto}
+                    {user?.nombreCompleto}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-800">
-                    {usuario.email}
+                    {user?.email}
                   </div>
                 </div>
 

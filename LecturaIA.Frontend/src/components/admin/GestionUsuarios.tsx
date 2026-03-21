@@ -1,18 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../config/api';
-
-interface Usuario {
-  id: number;
-  nombreCompleto: string;
-  email: string;
-  tipo: string;
-  estado: string;
-  ultimoAcceso: string | null;
-  suspendido: boolean;
-  motivoSuspension: string | null;
-  fechaSuspension: string | null;
-}
+import { adminService, type UsuarioAdmin as Usuario } from '../../services/adminService';
 
 export default function GestionUsuarios() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -42,11 +29,8 @@ export default function GestionUsuarios() {
 
   const cargarUsuarios = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/admin/usuarios`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsuarios(response.data);
+      const data = await adminService.obtenerUsuarios();
+      setUsuarios(data);
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
       alert('Error al cargar usuarios');
@@ -59,12 +43,8 @@ export default function GestionUsuarios() {
     if (!modalSuspender.usuario) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/api/admin/usuarios/suspender`,
-        { usuarioId: modalSuspender.usuario.id, motivo: '' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Nota: Flujo original suspendía con motivo vacío primero. Se mantiene, aunque lo ideal sería pedir motivo antes.
+      await adminService.suspenderUsuario(modalSuspender.usuario.id, '');
 
       setModalSuspender({ visible: false, usuario: null });
       setModalMotivoSuspension({ visible: true, usuarioId: modalSuspender.usuario.id });
@@ -82,12 +62,7 @@ export default function GestionUsuarios() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/api/admin/usuarios/suspender`,
-        { usuarioId: modalMotivoSuspension.usuarioId, motivo: motivoSuspension },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await adminService.suspenderUsuario(modalMotivoSuspension.usuarioId, motivoSuspension);
 
       setModalMotivoSuspension({ visible: false, usuarioId: 0 });
       setMotivoSuspension('');
@@ -103,12 +78,7 @@ export default function GestionUsuarios() {
     if (!modalReactivar.usuario) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/api/admin/usuarios/reactivar`,
-        { usuarioId: modalReactivar.usuario.id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await adminService.reactivarUsuario(modalReactivar.usuario.id);
 
       setModalReactivar({ visible: false, usuario: null });
       alert('Usuario reactivado correctamente.');
@@ -129,15 +99,13 @@ export default function GestionUsuarios() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/admin/usuarios/reiniciar-password`,
-        { usuarioId: modalReiniciarPassword.usuario.id, motivo: motivoReinicio },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const data = await adminService.reiniciarPassword(
+        modalReiniciarPassword.usuario.id,
+        motivoReinicio
       );
 
       setMotivoReinicio('');
-      alert(response.data.mensaje);
+      alert(data.mensaje);
       cargarUsuarios();
     } catch (error) {
       console.error('Error al reiniciar contraseña:', error);

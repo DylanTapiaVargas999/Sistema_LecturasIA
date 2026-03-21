@@ -1,18 +1,9 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_URL } from '../../config/api';
-
-interface CodigoDocente {
-  id: number;
-  codigo: string;
-  estado: string;
-  generadoPor: string;
-  fechaCreacion: string;
-  usadoPor: string | null;
-  fechaUso: string | null;
-}
+import { adminService, type CodigoDocente } from '../../services/adminService';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function CodigosDocentes() {
+  const { user } = useAuth();
   const [codigos, setCodigos] = useState<CodigoDocente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [codigoGenerado, setCodigoGenerado] = useState('');
@@ -23,11 +14,8 @@ export default function CodigosDocentes() {
 
   const cargarCodigos = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/admin/codigos-docentes`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCodigos(response.data);
+      const data = await adminService.obtenerCodigosDocentes();
+      setCodigos(data);
     } catch (error) {
       console.error('Error al cargar códigos:', error);
       alert('Error al cargar códigos de registro');
@@ -38,21 +26,14 @@ export default function CodigosDocentes() {
 
   const generarNuevoCodigo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const user = localStorage.getItem('user');
-      if (!user) return;
+      if (!user || user.id === undefined) return; // Validación de seguridad
+      const adminId = user.id;
 
-      const userData = JSON.parse(user);
+      const data = await adminService.generarCodigoDocente(adminId);
 
-      const response = await axios.post(
-        `${API_URL}/api/admin/codigos-docentes/generar`,
-        { administradorId: userData.id || 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.exito) {
-        setCodigoGenerado(response.data.codigo);
-        alert(response.data.mensaje);
+      if (data.exito) {
+        setCodigoGenerado(data.codigo);
+        alert(data.mensaje);
         cargarCodigos();
       }
     } catch (error) {

@@ -1,47 +1,32 @@
-import axios from 'axios';
+import api from '../config/api';
+import type { UsuarioAdmin, CodigoDocente } from '../types/user.types';
+import type { EstadisticasGenerales } from '../types/metrics.types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
-const API_URL = `${BASE_URL}/api`;
-
-export interface UsuarioAdmin {
-  id: number;
-  nombreCompleto: string;
-  email: string;
-  tipo: string;
-  estado: string;
-  ultimoAcceso: string | null;
-  suspendido: boolean;
-  motivoSuspension: string | null;
-  fechaSuspension: string | null;
-}
-
-export interface EstadisticasGenerales {
-  totalUsuarios: number;
-  totalDocentes: number;
-  totalEstudiantes: number;
-  usuariosActivos: number;
-  usuariosSuspendidos: number;
-  lecturasGeneradas: number;
-  cuestionariosCompletados: number;
-  aulasActivas: number;
-}
+export type { UsuarioAdmin, CodigoDocente, EstadisticasGenerales };
 
 class AdminService {
   // Obtener estadísticas generales
   async obtenerEstadisticas(): Promise<EstadisticasGenerales> {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/Admin/estadisticas`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await api.get<EstadisticasGenerales>('/Admin/estadisticas');
+    return response.data;
+  }
+
+  // Obtener códigos de registro para docentes
+  async obtenerCodigosDocentes(): Promise<CodigoDocente[]> {
+    const response = await api.get<CodigoDocente[]>('/Admin/codigos-docentes');
+    return response.data;
+  }
+
+  // Generar nuevo código para docente
+  async generarCodigoDocente(administradorId: number): Promise<{ codigo: string; mensaje: string; exito: boolean }> {
+    const response = await api.post<{ codigo: string; mensaje: string; exito: boolean }>('/Admin/codigos-docentes/generar', { administradorId });
     return response.data;
   }
 
   // Obtener todos los usuarios (con filtro opcional por email)
   async obtenerUsuarios(email?: string): Promise<UsuarioAdmin[]> {
-    const token = localStorage.getItem('token');
     const params = email ? { email } : {};
-    const response = await axios.get(`${API_URL}/Admin/usuarios`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await api.get<UsuarioAdmin[]>('/Admin/usuarios', {
       params
     });
     return response.data;
@@ -49,32 +34,17 @@ class AdminService {
 
   // Suspender usuario
   async suspenderUsuario(usuarioId: number, motivo: string): Promise<void> {
-    const token = localStorage.getItem('token');
-    await axios.post(
-      `${API_URL}/Admin/usuarios/suspender`,
-      { usuarioId, motivo },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post('/Admin/usuarios/suspender', { usuarioId, motivo });
   }
 
   // Reactivar usuario
   async reactivarUsuario(usuarioId: number): Promise<void> {
-    const token = localStorage.getItem('token');
-    await axios.post(
-      `${API_URL}/Admin/usuarios/reactivar`,
-      { usuarioId },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post('/Admin/usuarios/reactivar', { usuarioId });
   }
 
   // Reiniciar contraseña
   async reiniciarPassword(usuarioId: number, motivo: string): Promise<{ passwordTemporal: string; mensaje: string }> {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_URL}/Admin/usuarios/reiniciar-password`,
-      { usuarioId, motivo },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const response = await api.post<{ passwordTemporal: string; mensaje: string }>('/Admin/usuarios/reiniciar-password', { usuarioId, motivo });
     return response.data;
   }
 }

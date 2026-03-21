@@ -1,18 +1,12 @@
 import { useState } from 'react';
+import type { PreferenciasLectura } from '../types/reading.types';
+
+export type { PreferenciasLectura };
 
 interface EncuestaGuiadaProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (preferencias: PreferenciasLectura) => void;
-}
-
-export interface PreferenciasLectura {
-  temas: string[];
-  personajes: string[];
-  escenario: string;
-  longitud: string;
-  emocion: string;
-  proposito: string;
 }
 
 export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: EncuestaGuiadaProps) {
