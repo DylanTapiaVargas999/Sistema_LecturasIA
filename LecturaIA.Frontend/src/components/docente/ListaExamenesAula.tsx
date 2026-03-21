@@ -1,26 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import examenGrupalService from '../../services/examenGrupalService';
+import type { ExamenGrupalDto } from '../../types/exam.types';
 
-interface ExamenAula {
-  id: number;
-  titulo: string;
-  descripcion?: string;
-  fechaCreacion: string;
-  fechaLimite?: string;
-  totalEstudiantes: number;
-  completadosPorcentaje: number;
-  estado: string;
-  lecturaId: number;
-}
-
-interface Props {
-  aulaId: number;
-}
-
-export default function ListaExamenesAula({ aulaId }: Props) {
+export default function ListaExamenesAula({ aulaId }: { aulaId: number }) {
   const navigate = useNavigate();
-  const [examenes, setExamenes] = useState<ExamenAula[]>([]);
+  const [examenes, setExamenes] = useState<ExamenGrupalDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [reasignando, setReasignando] = useState<number | null>(null);
@@ -41,6 +26,12 @@ export default function ListaExamenesAula({ aulaId }: Props) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const calcularEstado = (examen: ExamenGrupalDto) => {
+    if (examen.porcentajeCompletado === 100) return 'Completado';
+    if (examen.fechaLimite && new Date(examen.fechaLimite) < new Date() && examen.porcentajeCompletado < 100) return 'Vencido';
+    return 'En Progreso';
   };
 
   const handleReasignar = async (examenId: number) => {
@@ -152,8 +143,8 @@ export default function ListaExamenesAula({ aulaId }: Props) {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <h4 className="text-lg font-bold text-gray-800">{examen.titulo}</h4>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getEstadoBadge(examen.estado)}`}>
-                      {examen.estado}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getEstadoBadge(calcularEstado(examen))}`}>
+                      {calcularEstado(examen)}
                     </span>
                   </div>
                   
@@ -190,12 +181,12 @@ export default function ListaExamenesAula({ aulaId }: Props) {
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
                       <span>Progreso de completado</span>
-                      <span className="font-semibold">{examen.completadosPorcentaje.toFixed(0)}%</span>
+                      <span className="font-semibold">{examen.porcentajeCompletado.toFixed(0)}%</span>
                     </div>
                     <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-green-500 to-emerald-600 h-full transition-all duration-300"
-                        style={{ width: `${examen.completadosPorcentaje}%` }}
+                        style={{ width: `${examen.porcentajeCompletado}%` }}
                       ></div>
                     </div>
                   </div>

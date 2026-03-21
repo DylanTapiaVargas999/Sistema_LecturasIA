@@ -37,15 +37,11 @@ export default function LecturaVistaLectura() {
   const cargarLecturaEIniciarSesion = async () => {
     try {
       setLoading(true);
-      console.log('Cargando lectura con ID:', id);
       const data = await lecturaService.obtenerLectura(Number(id));
-      console.log('Lectura cargada:', data);
       setLectura(data);
       
       // Iniciar sesión de lectura
-      console.log('Iniciando sesión de lectura...');
       const sesion = await sesionLecturaService.iniciarLectura(Number(id));
-      console.log('Sesión iniciada:', sesion);
       setSesionId(sesion.id);
       setTiempoInicio(new Date());
       
@@ -67,7 +63,6 @@ export default function LecturaVistaLectura() {
       const tiempoFin = new Date();
       const tiempoMinutos = (tiempoFin.getTime() - tiempoInicio.getTime()) / 60000;
       
-      console.log(`⏱️ Finalizando lectura - Tiempo: ${tiempoMinutos.toFixed(2)} minutos (${Math.round(tiempoMinutos * 60)} segundos)`);
       await sesionLecturaService.finalizarLectura(sesionId, tiempoMinutos);
       
       // Mostrar mensaje de felicitaciones

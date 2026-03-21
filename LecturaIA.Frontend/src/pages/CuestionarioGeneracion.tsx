@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { cuestionarioService } from '../services/cuestionarioService';
 import { EstadoCuestionario } from '../types/enums';
+import { UI_CONFIG } from '../config/constants';
 
-const POLLING_INTERVAL_MS = 2000;
-const POLLING_MAX_ATTEMPTS = 90; // 3 minutos máximo
+const POLLING_INTERVAL_MS = UI_CONFIG.POLLING_INTERVAL_MS;
+const POLLING_MAX_ATTEMPTS = UI_CONFIG.POLLING_MAX_ATTEMPTS;
 
 export default function CuestionarioGeneracion() {
   const { id: lecturaId } = useParams<{ id: string }>();

@@ -109,8 +109,7 @@ export default function CuestionarioRespuesta() {
 
       // Calcular tiempo transcurrido en minutos con decimales precisos
       const tiempoMinutos = tiempoTranscurrido / 60;
-      console.log(`⏱️ Tiempo del cuestionario: ${tiempoMinutos.toFixed(2)} minutos (${tiempoTranscurrido} segundos)`);
-
+      
       const resultado = await cuestionarioService.enviarRespuestas(cuestionarioId!, respuestasArray, tiempoMinutos);
 
       // Navegar a la página de resultados

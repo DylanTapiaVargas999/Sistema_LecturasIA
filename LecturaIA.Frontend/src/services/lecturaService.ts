@@ -3,7 +3,11 @@ import type { LecturaGenerada, LecturaLista, PreferenciasLectura } from '../type
 
 export type { LecturaGenerada, LecturaLista, PreferenciasLectura };
 
-// Helper para construir URL completa de imagen
+/**
+ * Parsea una ruta relativa de imagen para devolver la URL completa de la API
+ * @param relativePath Ruta relativa de la imagen (ej: "/images/cover.jpg")
+ * @returns URL absoluta completa incluyendo el dominio de la API
+ */
 export const getImageUrl = (relativePath?: string): string => {
   if (!relativePath) return '';
   if (relativePath.startsWith('http')) return relativePath;
@@ -18,10 +22,16 @@ export const getImageUrl = (relativePath?: string): string => {
   return relativePath;
 };
 
-// ==================== SERVICIO DE LECTURAS ====================
-
+/**
+ * Servicio para gestionar las operaciones relacionadas con lecturas generadas por IA
+ */
 export const lecturaService = {
-  // Generar nueva lectura con IA
+  
+  /**
+   * Genera una nueva lectura personalizada basada en las preferencias del usuario
+   * @param preferencias Objeto con las opciones seleccionadas por el estudiante (tema, personajes, etc.)
+   * @returns La lectura generada incluyendo título, contenido y metadatos
+   */
   async generarLectura(preferencias: PreferenciasLectura): Promise<LecturaGenerada> {
     const response = await api.post<LecturaGenerada>('/Lecturas/generar', {
       preferencias: {
@@ -36,31 +46,46 @@ export const lecturaService = {
     return response.data;
   },
 
-  // Obtener todas las lecturas del estudiante
+  /**
+   * Obtiene el listado completo de lecturas disponibles para el estudiante actual
+   * @returns Lista de lecturas con información resumida
+   */
   async obtenerLecturas(): Promise<LecturaLista[]> {
     const response = await api.get<LecturaLista[]>('/Lecturas');
     return response.data;
   },
 
-  // Obtener una lectura específica
+  /**
+   * Obtiene los detalles completos de una lectura específica por su ID
+   * @param id ID único de la lectura
+   * @returns Objeto detallado de la lectura incluyendo contenido completo
+   */
   async obtenerLectura(id: number): Promise<LecturaGenerada> {
     const response = await api.get<LecturaGenerada>(`/Lecturas/${id}`);
     return response.data;
   },
 
-  // Eliminar una lectura
+  /**
+   * Elimina una lectura del sistema
+   * @param id ID de la lectura a eliminar
+   */
   async eliminarLectura(id: number): Promise<void> {
-    console.log('Eliminando lectura ID:', id);
     await api.delete(`/Lecturas/${id}`);
-    console.log('Lectura eliminada exitosamente');
   },
 
-  // Marcar/desmarcar como favorita
+  /**
+   * Cambia el estado de "favorita" de una lectura
+   * @param lecturaId ID de la lectura
+   * @param esFavorita Nuevo estado (true para marcar, false para desmarcar)
+   */
   async toggleFavorita(lecturaId: number, esFavorita: boolean): Promise<void> {
     await api.put(`/Lecturas/${lecturaId}/favorita`, { esFavorita });
   },
 
-  // Obtener solo lecturas favoritas
+  /**
+   * Obtiene únicamente las lecturas marcadas como favoritas por el estudiante
+   * @returns Lista filtrada de lecturas favoritas
+   */
   async obtenerFavoritas(): Promise<LecturaLista[]> {
     const response = await api.get<LecturaLista[]>('/Lecturas/favoritas');
     return response.data;

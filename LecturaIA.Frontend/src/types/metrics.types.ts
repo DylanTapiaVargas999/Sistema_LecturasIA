@@ -7,6 +7,8 @@ export interface EstadisticasGenerales {
   lecturasGeneradas: number;
   cuestionariosCompletados: number;
   aulasActivas: number;
+  codigosDocentesActivos?: number;
+  codigosDocentesUsados?: number;
 }
 
 export interface PuntoEvolucion {

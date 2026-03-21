@@ -25,7 +25,19 @@ export interface AuthResponseDto {
   tipoUsuario: 'Estudiante' | 'Docente' | 'Administrador';
   nombreCompleto: string;
   email: string;
-  expiracion: string; // Puede ser fechaExpiracion en JSON, pero mapeamos manualmente si es necesario
+  expiracion: string;
+}
+
+export interface CambiarPasswordDto {
+  passwordActual: string;
+  nuevaPassword: string;
+  confirmarPassword: string;
+}
+
+export interface ValidacionPasswordDto {
+  score: number;
+  feedback: string[];
+  nivel: 'Debil' | 'Media' | 'Fuerte';
 }
 
 export interface LoginRequiere2FADto {
@@ -38,16 +50,4 @@ export interface LoginRequiere2FADto {
 export interface GradoOption {
   value: number;
   label: string;
-}
-
-export interface CambiarPasswordDto {
-  passwordActual: string;
-  nuevaPassword: string;
-  confirmarPassword: string;
-}
-
-export interface ValidacionPasswordDto {
-  esFuerte: boolean;
-  mensajes: string[];
-  nivel: string;
 }

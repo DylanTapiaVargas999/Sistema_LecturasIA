@@ -10,6 +10,16 @@ export interface PerfilUsuario {
   intereses?: string;
   nivelDificultad?: string;
   claseActual?: AulaInfo | null;
+  avatarUrl?: string; // Nuevo campo para avatar
+}
+
+export type PerfilUsuarioDto = PerfilUsuario;
+
+export interface ActualizarPerfilDto {
+  nombreCompleto?: string;
+  edad?: number;
+  intereses?: string;
+  nivelDificultad?: string;
 }
 
 export interface UsuarioAdmin {
