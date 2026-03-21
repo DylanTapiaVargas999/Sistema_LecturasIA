@@ -15,7 +15,7 @@ public class GradosController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene la lista de grados disponibles para el ComboBox
+    /// Obtiene la lista de grados disponibles para el ComboBox.
     /// </summary>
     /// <returns>Lista de opciones de grado con value y label</returns>
     [HttpGet]
@@ -31,12 +31,12 @@ public class GradosController : ControllerBase
                     label = ObtenerEtiquetaGrado(g)
                 })
                 .ToList();
-
             return Ok(grados);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al obtener grados");
+            // Fail fast: error controlado
             return StatusCode(500, new { mensaje = "Error al obtener la lista de grados" });
         }
     }

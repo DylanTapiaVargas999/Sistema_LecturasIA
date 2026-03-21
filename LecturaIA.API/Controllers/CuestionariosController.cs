@@ -37,19 +37,23 @@ namespace LecturaIA.API.Controllers
         /// <summary>
         /// Método helper para obtener el ID del estudiante desde el token JWT
         /// </summary>
+        /// <summary>
+        /// Obtiene el ID del estudiante autenticado desde el token JWT.
+        /// </summary>
         private async Task<(int? estudianteId, ActionResult? errorResult)> ObtenerEstudianteIdAsync()
         {
-            var usuarioId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
+            var usuarioIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
+            {
+                return (null, Unauthorized(new { message = "Token inválido" }));
+            }
             var estudiante = await _context.Estudiantes
                 .FirstOrDefaultAsync(e => e.UsuarioId == usuarioId);
-
             if (estudiante == null)
             {
                 _logger.LogWarning("No se encontró estudiante para usuario {UsuarioId}", usuarioId);
                 return (null, Unauthorized(new { message = "Estudiante no encontrado" }));
             }
-
             return (estudiante.Id, null);
         }
 

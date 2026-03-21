@@ -31,38 +31,35 @@ namespace LecturaIA.API.Controllers
         /// CU-005: Iniciar una sesión de lectura
         /// POST /api/SesionesLectura/iniciar
         /// </summary>
+        /// <summary>
+        /// Inicia una nueva sesión de lectura para el estudiante autenticado.
+        /// </summary>
         [HttpPost("iniciar")]
         public async Task<ActionResult<SesionLecturaDto>> IniciarLectura([FromBody] IniciarLecturaDto request)
         {
             try
             {
-                // Obtener el ID del usuario del token JWT
-                var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                
-                // Buscar el estudiante asociado al usuario
+                var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
+                {
+                    return Unauthorized(new { message = "Estudiante no encontrado" });
+                }
                 var estudiante = await _context.Estudiantes
                     .FirstOrDefaultAsync(e => e.UsuarioId == usuarioId);
-
                 if (estudiante == null)
                 {
                     _logger.LogWarning("No se encontró estudiante para usuario {UsuarioId}", usuarioId);
                     return Unauthorized(new { message = "Estudiante no encontrado" });
                 }
-
                 var estudianteId = estudiante.Id;
-
-                // Verificar que la lectura existe y pertenece al estudiante
                 var lectura = await _context.Lecturas
                     .FirstOrDefaultAsync(l => l.Id == request.LecturaId && l.EstudianteId == estudianteId);
-
                 if (lectura == null)
                 {
-                    _logger.LogWarning("Lectura {LecturaId} no encontrada para estudiante {EstudianteId}", 
+                    _logger.LogWarning("Lectura {LecturaId} no encontrada para estudiante {EstudianteId}",
                         request.LecturaId, estudianteId);
                     return NotFound(new { message = "Lectura no encontrada" });
                 }
-
-                // Crear sesión de lectura
                 var sesion = new SesionLectura
                 {
                     Id = Guid.NewGuid(),
@@ -72,17 +69,11 @@ namespace LecturaIA.API.Controllers
                     TiempoLecturaMinutos = 0,
                     Completada = false
                 };
-
                 _context.SesionesLectura.Add(sesion);
-                
-                // Actualizar estado de la lectura a "en_progreso"
                 lectura.Estado = "en_progreso";
-                
                 await _context.SaveChangesAsync();
-
                 _logger.LogInformation("Sesión de lectura iniciada: {SesionId} para estudiante {EstudianteId}", 
                     sesion.Id, estudianteId);
-
                 return Ok(new SesionLecturaDto
                 {
                     Id = sesion.Id,

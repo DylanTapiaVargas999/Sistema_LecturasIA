@@ -30,49 +30,46 @@ namespace LecturaIA.API.Controllers
             _logger = logger;
         }
 
-        // POST: api/Lecturas/generar
+        /// <summary>
+        /// Genera una nueva lectura personalizada para el estudiante autenticado.
+        /// </summary>
         [HttpPost("generar")]
         public async Task<ActionResult<LecturaGeneradaDto>> GenerarLectura([FromBody] GenerarLecturaRequestDto request)
         {
             try
             {
-                // Obtener el estudiante del token JWT
-                var usuarioId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
+                {
+                    return Unauthorized(new { mensaje = EstudianteNoEncontrado });
+                }
                 var estudiante = await _context.Estudiantes
                     .FirstOrDefaultAsync(e => e.UsuarioId == usuarioId);
-
                 if (estudiante == null)
                 {
                     return Unauthorized(new { mensaje = EstudianteNoEncontrado });
                 }
-
-                // Validaciones
+                // Fail fast: máximo 2 temas
                 if (request.Preferencias.Temas.Count > 2)
                 {
                     return BadRequest(new { mensaje = "Solo puedes seleccionar máximo 2 temas" });
                 }
-
+                // Fail fast: máximo 2 personajes
                 if (request.Preferencias.Personajes.Count > 2)
                 {
                     return BadRequest(new { mensaje = "Solo puedes seleccionar máximo 2 personajes" });
                 }
-
                 // Seleccionar tipo de lectura aleatorio
-                var tiposLectura = new[] { "Narrativa", "Descriptiva", "Argumentativa", "Expositiva", "Informativa" };
+                string[] tiposLectura = { "Narrativa", "Descriptiva", "Argumentativa", "Expositiva", "Informativa" };
                 var random = new Random();
                 var tipoLectura = tiposLectura[random.Next(tiposLectura.Length)];
-
                 _logger.LogInformation("Generando lectura de tipo {TipoLectura} para estudiante {EstudianteId}", tipoLectura, estudiante.Id);
-
-                // Generar lectura con IA
                 var (titulo, contenido, urlImagen) = await _lecturaIAService.GenerarLecturaAsync(
                     request.Preferencias,
                     tipoLectura,
                     estudiante.Edad,
                     estudiante.Grado.ToString()
                 );
-
-                // Guardar en la base de datos
                 var lectura = new Lectura
                 {
                     EstudianteId = estudiante.Id,
@@ -91,12 +88,9 @@ namespace LecturaIA.API.Controllers
                     Progreso = 0,
                     EsFavorita = false
                 };
-
                 _context.Lecturas.Add(lectura);
                 await _context.SaveChangesAsync();
-
                 _logger.LogInformation("Lectura generada exitosamente con ID {LecturaId}", lectura.Id);
-
                 return Ok(new LecturaGeneradaDto
                 {
                     Id = lectura.Id,

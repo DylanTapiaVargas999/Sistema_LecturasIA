@@ -24,6 +24,9 @@ public class MetricasController : ControllerBase
     /// <summary>
     /// Obtiene métricas individuales de un estudiante
     /// </summary>
+    /// <summary>
+    /// Obtiene métricas individuales de un estudiante.
+    /// </summary>
     [HttpGet("estudiante/{estudianteId}")]
     [Authorize(Roles = "Docente")]
     public async Task<ActionResult<MetricasEstudianteDto>> ObtenerMetricasEstudiante(int estudianteId)
@@ -33,12 +36,11 @@ public class MetricasController : ControllerBase
             var estudiante = await _context.Estudiantes
                 .Include(e => e.Usuario)
                 .FirstOrDefaultAsync(e => e.Id == estudianteId);
-
             if (estudiante == null)
             {
+                // Fail fast: estudiante no encontrado
                 return NotFound(new { mensaje = "Estudiante no encontrado" });
             }
-
             // Obtener sesiones completadas con sus cuestionarios evaluados
             var sesiones = await _context.SesionesLectura
                 .Include(sl => sl.Lectura)
@@ -54,15 +56,12 @@ public class MetricasController : ControllerBase
                             sl.Cuestionario.Resultado != null)
                 .OrderByDescending(sl => sl.FechaFinalizacion)
                 .ToListAsync();
-
             // 1. Lecturas Completadas
             var lecturasCompletadas = sesiones.Count;
-
             // 2. Promedio de Quiz (basado en porcentaje del resultado)
             var promedioQuiz = sesiones.Any() 
                 ? sesiones.Average(sl => sl.Cuestionario!.Resultado!.Porcentaje) 
                 : 0;
-
             // 3. Nivel Actual
             var nivelActual = estudiante.NivelDificultad switch
             {
@@ -71,10 +70,8 @@ public class MetricasController : ControllerBase
                 Models.Entities.NivelDificultad.Dificil => "Difícil",
                 _ => "No determinado"
             };
-
             // 4. Última Actividad
             var ultimaActividad = sesiones.FirstOrDefault()?.FechaFinalizacion;
-
             // 5. Tipo de Texto Favorito (con mejor rendimiento promedio)
             var tipoTextoFavorito = "No determinado";
             if (sesiones.Any())
@@ -91,18 +88,15 @@ public class MetricasController : ControllerBase
                     .Where(x => x.CantidadLecturas >= 1) // Al menos 1 lectura
                     .OrderByDescending(x => x.PromedioRendimiento)
                     .FirstOrDefault();
-
                 if (promediosPorTipo != null)
                 {
                     tipoTextoFavorito = promediosPorTipo.TipoTexto;
                 }
             }
-
             // 6. Tiempo Promedio por Lectura (en minutos con decimales)
             var tiempoPromedioLectura = sesiones.Any() 
                 ? Math.Round(sesiones.Average(sl => sl.TiempoLecturaMinutos), 2) 
                 : 0;
-
             // 7. Evolución Temporal (últimos 10 quizzes)
             var evolucionTemporal = sesiones
                 .Take(10)
@@ -115,52 +109,43 @@ public class MetricasController : ControllerBase
                     TituloLectura = sl.Lectura?.Titulo ?? "Sin título"
                 })
                 .ToList();
-
             // 8. Análisis de Habilidad por Tipo de Pregunta
             decimal porcentajeLiteral = 0;
             decimal porcentajeInferencial = 0;
             decimal porcentajeCritico = 0;
-
             if (sesiones.Any())
             {
+                const int PreguntasLiteralesPorCuestionario = 4;
+                const int PreguntasAnaliticasPorCuestionario = 4;
+                const int PreguntasCriticasPorCuestionario = 2;
                 var totalLiterales = 0;
                 var correctasLiterales = 0;
                 var totalAnaliticas = 0;
                 var correctasAnaliticas = 0;
                 var totalCriticas = 0;
                 decimal puntajeCriticas = 0;
-
                 foreach (var sesion in sesiones)
                 {
                     if (sesion.Cuestionario?.Resultado != null)
                     {
-                        // Contar literales (asumiendo 4 por cuestionario)
-                        totalLiterales += 4;
+                        totalLiterales += PreguntasLiteralesPorCuestionario;
                         correctasLiterales += sesion.Cuestionario.Resultado.CorrectasLiterales;
-
-                        // Contar analíticas (asumiendo 4 por cuestionario)
-                        totalAnaliticas += 4;
+                        totalAnaliticas += PreguntasAnaliticasPorCuestionario;
                         correctasAnaliticas += sesion.Cuestionario.Resultado.CorrectasAnaliticas;
-
-                        // Sumar puntaje críticas (máximo 2 por cuestionario)
-                        totalCriticas += 2;
+                        totalCriticas += PreguntasCriticasPorCuestionario;
                         puntajeCriticas += sesion.Cuestionario.Resultado.PuntajeCriticas;
                     }
                 }
-
                 porcentajeLiteral = totalLiterales > 0 
                     ? (decimal)correctasLiterales / totalLiterales * 100 
                     : 0;
-
                 porcentajeInferencial = totalAnaliticas > 0 
                     ? (decimal)correctasAnaliticas / totalAnaliticas * 100 
                     : 0;
-
                 porcentajeCritico = totalCriticas > 0 
                     ? puntajeCriticas / totalCriticas * 100 
                     : 0;
             }
-
             var metricas = new MetricasEstudianteDto
             {
                 LecturasCompletadas = lecturasCompletadas,
@@ -177,7 +162,6 @@ public class MetricasController : ControllerBase
                     PorcentajeCritico = Math.Round(porcentajeCritico, 2)
                 }
             };
-
             return Ok(metricas);
         }
         catch (Exception ex)
