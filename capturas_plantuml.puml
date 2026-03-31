@@ -1,0 +1,459 @@
+' ============================================================
+' DIAGRAMA 1 — CU-0001: Gestionar Autenticación y Autorización
+' ============================================================
+@startuml CU0001_Paquetes
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+scale 0.75
+
+skinparam package {
+  BackgroundColor #EEF2FF
+  BorderColor #6366F1
+  FontColor #1E1B4B
+  FontStyle bold
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #A5B4FC
+  FontColor #312E81
+  FontSize 9
+}
+
+title <b>CU-0001 — Gestionar Autenticación y Autorización</b>\nDiagrama de Paquetes (Vista de Desarrollo — Figura 107)
+
+together {
+  package "LecturaIA.API" as API1 {
+
+    package "Configuration" as CFG1 {
+      [EmailSettings.cs] as ES1
+    }
+
+    package "Controllers" as CTRL1 {
+      [AuthController.cs] as AC1
+      [PasswordController.cs] as PC1
+    }
+
+    package "Services" as SVC1 {
+      [AuthService.cs] as AS1
+      [IAuthService.cs] as IAS1
+      [EmailService.cs] as EMS1
+      [IEmailService.cs] as IEMS1
+      [PasswordService.cs] as PS1
+      [IPasswordService.cs] as IPS1
+    }
+
+    package "Models/DTOs" as DTOS1 {
+      [LoginDto.cs] as LD1
+      [AuthResponseDto.cs] as ARD1
+      [RegistroEstudianteDto.cs] as RED1
+      [RegistroDocenteDto.cs] as RDD1
+      [VerificacionEmailDto.cs] as VED1
+      [RecuperacionPasswordDto.cs] as RPD1
+      [VerificarCodigoLoginDto.cs] as VCL1
+      [PasswordDTOs.cs] as PDT1
+    }
+
+    package "Models/Entities" as ENT1 {
+      [Usuario.cs] as USR1
+      [Estudiante.cs] as EST1
+      [Docente.cs] as DOC1
+      [CodigoVerificacionLogin.cs] as CVL1
+      [GradoEscolar.cs] as GE1
+    }
+
+    package "Data" as DATA1 {
+      [ApplicationDbContext.cs] as DBX1
+    }
+  }
+}
+
+together {
+  package "LecturaIA.Frontend" as FE1 {
+
+    package "pages" as PAGES1 {
+      [DocenteAuth.tsx] as DA1
+      [EstudianteAuth.tsx] as EA1
+      [VerificarEmail.tsx] as VE1
+      [RecuperarPassword.tsx] as RP1
+    }
+
+    package "components" as COMP1 {
+      [VerificacionCodigo.tsx] as VC1
+      [CambiarPasswordModal.tsx] as CPM1
+      [ProtectedRoute.tsx] as PR1
+    }
+
+    package "services" as FSVC1 {
+      [authService.ts] as AUTHS1
+      [passwordService.ts] as PWDS1
+    }
+
+    package "context" as CTX1 {
+      [AuthContext.tsx] as CTX_A1
+    }
+
+    package "hooks" as HK1 {
+      [useAuth.ts] as UA1
+    }
+
+    package "config" as FCFG1 {
+      [api.ts] as API_TS1
+    }
+  }
+}
+
+' Frontend services --> API Controllers
+AUTHS1  --> AC1  : HTTP REST
+PWDS1   --> PC1  : HTTP REST
+
+' Controllers --> Services
+AC1 --> AS1
+AC1 --> IAS1
+PC1 --> PS1
+PC1 --> IPS1
+
+' Services --> Data
+AS1   --> DBX1
+PS1   --> DBX1
+EMS1  --> DBX1
+
+' Services inter
+AS1    --> EMS1
+IEMS1  --> EMS1
+IAS1   --> AS1
+IPS1   --> PS1
+
+' Configuration --> Services
+ES1 --> EMS1
+
+' Entities --> Data
+USR1 --> DBX1
+EST1 --> DBX1
+DOC1 --> DBX1
+CVL1 --> DBX1
+GE1  --> DBX1
+
+' Frontend internal
+UA1      --> CTX_A1
+API_TS1  --> AUTHS1
+API_TS1  --> PWDS1
+
+@enduml
+
+
+' ============================================================
+' DIAGRAMA 2 — CU-0002: Gestionar Biblioteca Personal de Lecturas
+' ============================================================
+@startuml CU0002_Paquetes
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+scale 0.75
+
+skinparam package {
+  BackgroundColor #ECFDF5
+  BorderColor #10B981
+  FontColor #064E3B
+  FontStyle bold
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #6EE7B7
+  FontColor #065F46
+  FontSize 9
+}
+
+title <b>CU-0002 — Gestionar Biblioteca Personal de Lecturas</b>\nDiagrama de Paquetes (Vista de Desarrollo — Figura 107)
+
+together {
+  package "LecturaIA.API" as API2 {
+
+    package "Controllers" as CTRL2 {
+      [LecturasController.cs] as LC2
+      [SesionesLecturaController.cs] as SLC2
+    }
+
+    package "Services" as SVC2 {
+      [LecturaIAService.cs] as LIS2
+    }
+
+    package "Models/DTOs" as DTOS2 {
+      [LecturaDto.cs] as LD2
+      [ComprencionLectoraDto.cs] as CLD2
+    }
+
+    package "Models/Entities" as ENT2 {
+      [Lectura.cs] as LECT2
+      [SesionLectura.cs] as SL2
+    }
+
+    package "Data" as DATA2 {
+      [ApplicationDbContext.cs] as DBX2
+    }
+  }
+}
+
+together {
+  package "LecturaIA.Frontend" as FE2 {
+
+    package "pages" as PAGES2 {
+      [EstudianteDashboard.tsx] as ED2
+      [LecturaDetalle.tsx] as LDET2
+      [LecturaVistaLectura.tsx] as LVL2
+      [HistorialResultados.tsx] as HR2
+    }
+
+    package "components/dashboard" as CDASH2 {
+      [LecturasFilter.tsx] as LF2
+      [LecturasList.tsx] as LL2
+    }
+
+    package "components" as COMP2 {
+      [AyudaContextual.tsx] as AY2
+    }
+
+    package "services" as FSVC2 {
+      [lecturaService.ts] as LS2
+      [sesionLecturaService.ts] as SLS2
+    }
+
+    package "config" as FCFG2 {
+      [api.ts] as API_TS2
+    }
+  }
+}
+
+' Frontend services --> API Controllers
+LS2  --> LC2  : HTTP REST
+SLS2 --> SLC2 : HTTP REST
+
+' Controllers --> Services
+LC2  --> LIS2
+SLC2 --> LIS2
+
+' Services --> Data
+LIS2 --> DBX2
+
+' Entities --> Data
+LECT2 --> DBX2 : DbSet<>
+SL2   --> DBX2 : DbSet<>
+
+' Frontend pages --> components
+ED2   --> LF2
+ED2   --> LL2
+LDET2 --> AY2
+LVL2  --> AY2
+
+' config --> services
+API_TS2 --> LS2
+API_TS2 --> SLS2
+
+@enduml
+
+
+' ============================================================
+' DIAGRAMA 3 — CU-0003: Gestionar Preferencias de Contenido del Estudiante
+' ============================================================
+@startuml CU0003_Paquetes
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+scale 0.75
+
+skinparam package {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+  FontColor #7C2D12
+  FontStyle bold
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #FDBA74
+  FontColor #9A3412
+  FontSize 9
+}
+
+title <b>CU-0003 — Gestionar Preferencias de Contenido del Estudiante</b>\nDiagrama de Paquetes (Vista de Desarrollo — Figura 107)
+
+  package "LecturaIA.API" as API3 {
+
+    package "Controllers" as CTRL3 {
+      [LecturasController.cs] as LC3
+    }
+
+    package "Services" as SVC3 {
+      [LecturaIAService.cs] as LIS3
+    }
+
+    package "Models/Entities" as ENT3 {
+      [Lectura.cs] as LECT3
+    }
+
+    package "Data" as DATA3 {
+      [ApplicationDbContext.cs] as DBX3
+    }
+  }
+
+  package "LecturaIA.Frontend" as FE3 {
+
+    package "components" as COMP3 {
+      [EncuestaGuiadaModal.tsx] as EGM3
+      [VistaPreviaPreferenciasModal.tsx] as VPP3
+    }
+
+    package "pages" as PAGES3 {
+      [CuestionarioGeneracion.tsx] as CG3
+      [EstudianteDashboard.tsx] as ED3
+    }
+
+    package "services" as FSVC3 {
+      [lecturaService.ts] as LS3
+    }
+
+    package "data" as FDATA3 {
+      [contenidoAyuda.ts] as CA3
+    }
+
+    package "hooks" as HK3 {
+      [useAsync.ts] as UAS3
+    }
+
+    package "config" as FCFG3 {
+      [api.ts] as API_TS3
+    }
+  }
+
+' Frontend services --> API Controllers
+LS3 --> LC3 : HTTP POST /api/lecturas/generar
+
+' Controllers --> Services
+LC3 --> LIS3
+
+' Services --> Data
+LIS3 --> DBX3
+
+' Entities --> Data
+LECT3 --> DBX3 : DbSet<>
+
+' Frontend internal
+ED3  --> EGM3
+EGM3 --> VPP3
+VPP3 --> CG3
+CG3  --> LS3
+EGM3 --> CA3
+UAS3 --> CG3
+
+' config --> services
+API_TS3 --> LS3
+
+@enduml
+
+
+' ============================================================
+' DIAGRAMA 4 — CU-0004: Generar Textos Adaptados con IA
+' ============================================================
+@startuml CU0004_Paquetes
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam linetype ortho
+scale 0.75
+
+skinparam package {
+  BackgroundColor #F5F3FF
+  BorderColor #8B5CF6
+  FontColor #3B0764
+  FontStyle bold
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #C4B5FD
+  FontColor #4C1D95
+  FontSize 9
+}
+
+title <b>CU-0004 — Generar Textos Adaptados con IA</b>\nDiagrama de Paquetes (Vista de Desarrollo — Figura 107)
+
+cloud "Gemini AI\n(Google)" as GEMINI4
+cloud "Hugging Face\n(Stable Diffusion)" as HF4
+
+  package "LecturaIA.API" as API4 {
+
+    package "Configuration" as CFG4 {
+      [IASettings.cs] as IAS4
+    }
+
+    package "Controllers" as CTRL4 {
+      [LecturasController.cs] as LC4
+    }
+
+    package "Services" as SVC4 {
+      [LecturaIAService.cs] as LIS4
+    }
+
+    package "Models/DTOs" as DTOS4 {
+      [LecturaDto.cs] as LD4
+      [ComprencionLectoraDto.cs] as CLD4
+    }
+
+    package "Models/Entities" as ENT4 {
+      [Lectura.cs] as LECT4
+    }
+
+    package "Data" as DATA4 {
+      [ApplicationDbContext.cs] as DBX4
+    }
+  }
+
+  package "LecturaIA.Frontend" as FE4 {
+
+    package "pages" as PAGES4 {
+      [CuestionarioGeneracion.tsx] as CG4
+      [LecturaDetalle.tsx] as LDET4
+    }
+
+    package "services" as FSVC4 {
+      [lecturaService.ts] as LS4
+    }
+
+    package "hooks" as HK4 {
+      [useAsync.ts] as UAS4
+    }
+
+    package "config" as FCFG4 {
+      [api.ts] as API_TS4
+    }
+  }
+
+' Frontend services --> API Controllers
+LS4  --> LC4 : HTTP POST /api/lecturas/generar
+
+' Controllers --> Services
+LC4  --> LIS4
+
+' Services --> Externos
+LIS4 --> GEMINI4 : texto generado
+LIS4 --> HF4     : imagen portada
+
+' Services --> Data
+LIS4 --> DBX4
+
+' Configuration --> Services
+IAS4 --> LIS4 : API Keys
+
+' Entities --> Data
+LECT4 --> DBX4 : DbSet<>
+
+' Frontend internal
+CG4  --> LS4
+UAS4 --> CG4 : polling estado
+CG4  --> LDET4 : redirige al completar
+
+' config --> services
+API_TS4 --> LS4
+
+@enduml
