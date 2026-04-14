@@ -1,7 +1,9 @@
 using LecturaIA.API.Configuration;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using MimeKit.Text;
 
 namespace LecturaIA.API.Services
 {
@@ -199,25 +201,33 @@ namespace LecturaIA.API.Services
         {
             try
             {
-                using var message = new MailMessage();
-                message.From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName);
-                message.To.Add(new MailAddress(destinatario));
-                message.Subject = asunto;
-                message.Body = cuerpoHtml;
-                message.IsBodyHtml = true;
+                var email = new MimeMessage();
+                email.From.Add(new MailboxAddress(_emailSettings.SenderName, _emailSettings.SenderEmail));
+                email.To.Add(MailboxAddress.Parse(destinatario));
+                email.Subject = asunto;
+                email.Body = new TextPart(TextFormat.Html) { Text = cuerpoHtml };
 
-                using var smtpClient = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort);
-                smtpClient.EnableSsl = _emailSettings.EnableSsl;
-                smtpClient.UseDefaultCredentials = false;
-                smtpClient.Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password);
+                using var smtp = new SmtpClient();
+                
+                // Conectar usando STARTTLS si EnableSsl es true
+                await smtp.ConnectAsync(
+                    _emailSettings.SmtpServer, 
+                    _emailSettings.SmtpPort, 
+                    _emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
 
-                await smtpClient.SendMailAsync(message);
+                // Autenticar
+                await smtp.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+                
+                // Enviar y desconectar
+                await smtp.SendAsync(email);
+                await smtp.DisconnectAsync(true);
+
                 _logger.LogInformation("Email enviado exitosamente a {Email}", destinatario);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al enviar email a {Email}", destinatario);
+                _logger.LogError(ex, "Error crítico al enviar email a {Email}", destinatario);
                 return false;
             }
         }
