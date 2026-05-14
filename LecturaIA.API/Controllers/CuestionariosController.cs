@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
+using Microsoft.Data.SqlClient;
+
 namespace LecturaIA.API.Controllers
 {
     /// <summary>
@@ -37,19 +39,23 @@ namespace LecturaIA.API.Controllers
         /// <summary>
         /// Método helper para obtener el ID del estudiante desde el token JWT
         /// </summary>
+        /// <summary>
+        /// Obtiene el ID del estudiante autenticado desde el token JWT.
+        /// </summary>
         private async Task<(int? estudianteId, ActionResult? errorResult)> ObtenerEstudianteIdAsync()
         {
-            var usuarioId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
+            var usuarioIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
+            {
+                return (null, Unauthorized(new { message = "Token inválido" }));
+            }
             var estudiante = await _context.Estudiantes
                 .FirstOrDefaultAsync(e => e.UsuarioId == usuarioId);
-
             if (estudiante == null)
             {
                 _logger.LogWarning("No se encontró estudiante para usuario {UsuarioId}", usuarioId);
                 return (null, Unauthorized(new { message = "Estudiante no encontrado" }));
             }
-
             return (estudiante.Id, null);
         }
 
@@ -88,7 +94,19 @@ namespace LecturaIA.API.Controllers
 
                 if (cuestionarioExistente != null)
                 {
-                    return BadRequest(new { message = "Ya existe un cuestionario para esta sesión" });
+                    _logger.LogInformation("Cuestionario ya existe para sesión {SesionId}", sesion.Id);
+                    return Ok(new CuestionarioDto
+                    {
+                        Id = cuestionarioExistente.Id,
+                        SesionLecturaId = cuestionarioExistente.SesionLecturaId!.Value,
+                        LecturaId = cuestionarioExistente.LecturaId,
+                        FechaGeneracion = cuestionarioExistente.FechaGeneracion,
+                        Estado = cuestionarioExistente.Estado,
+                        NivelDificultad = cuestionarioExistente.NivelDificultad,
+                        TipoTexto = cuestionarioExistente.TipoTexto,
+                        TituloLectura = sesion.Lectura.Titulo,
+                        Preguntas = new List<PreguntaDto>()
+                    });
                 }
 
                 // Crear cuestionario
@@ -181,6 +199,33 @@ namespace LecturaIA.API.Controllers
                     TipoTexto = cuestionario.TipoTexto,
                     TituloLectura = sesion.Lectura.Titulo,
                     Preguntas = new List<PreguntaDto>()
+                });
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627))
+            {
+                _logger.LogWarning("Intento de crear cuestionario duplicado para sesión {SesionId}", request.SesionLecturaId);
+                
+                // Si hubo un conflicto de inserción (race condition), recuperamos el cuestionario que ya fue insertado por el otro hilo
+                var existente = await _context.Cuestionarios.FirstOrDefaultAsync(c => c.SesionLecturaId == request.SesionLecturaId);
+                if (existente != null)
+                {
+                    return Ok(new CuestionarioDto
+                    {
+                        Id = existente.Id,
+                        SesionLecturaId = existente.SesionLecturaId!.Value,
+                        LecturaId = existente.LecturaId,
+                        FechaGeneracion = existente.FechaGeneracion,
+                        Estado = existente.Estado,
+                        NivelDificultad = existente.NivelDificultad,
+                        TipoTexto = existente.TipoTexto,
+                        Preguntas = new List<PreguntaDto>()
+                    });
+                }
+
+                return Conflict(new { 
+                    message = "Ya existe un cuestionario para esta sesión de lectura",
+                    sesionId = request.SesionLecturaId,
+                    codigo = "DUPLICATE_CUESTIONARIO"
                 });
             }
             catch (Exception ex)

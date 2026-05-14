@@ -43,28 +43,28 @@ namespace LecturaIA.API.Services
         {
             try
             {
-                // PASO 1: Generar título y contenido con OpenAI
-                var (titulo, contenido) = await GenerarTextoConOpenAIAsync(preferencias, tipoLectura, edad, grado);
+                // PASO 1: Generar título y contenido con Gemini
+                var (titulo, contenido) = await GenerarTextoConGeminiAsync(preferencias, tipoLectura, edad, grado);
 
                 // PASO 2: Generar imagen con Hugging Face
-                var urlImagen = await GenerarImagenConHuggingFaceAsync(titulo, preferencias);
+                var urlImagen = string.Empty;
 
                 return (titulo, contenido, urlImagen);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al generar lectura con IA");
+                _logger.LogError(ex, "Error al generar lectura con IA para tipo {TipoLectura}", tipoLectura);
                 throw;
             }
         }
 
-        private async Task<(string titulo, string contenido)> GenerarTextoConOpenAIAsync(
+        private async Task<(string titulo, string contenido)> GenerarTextoConGeminiAsync(
             PreferenciasLecturaDto preferencias,
             string tipoLectura,
             int edad,
             string grado)
         {
-            _logger.LogInformation("📚 Iniciando generación de lectura con OpenAI");
+            _logger.LogInformation("📚 Iniciando generación de lectura con Gemini");
             
             var longitud = preferencias.Longitud.ToLower() switch
             {
@@ -80,7 +80,9 @@ namespace LecturaIA.API.Services
             _logger.LogInformation("📝 Parámetros: Longitud={Longitud}, Temas={Temas}, Edad={Edad}", 
                 longitud, temas, edad);
 
-            var prompt = $@"Crea una historia de tipo {tipoLectura} para un niño de {edad} años ({grado} grado de primaria).
+            var prompt = $@"Eres un escritor experto en literatura infantil. Respondes SOLO con JSON válido, sin texto adicional.
+            
+Crea una historia de tipo {tipoLectura} para un niño de {edad} años ({grado} grado de primaria).
 
 PREFERENCIAS DEL NIÑO:
 - Temas favoritos: {temas}
@@ -106,75 +108,92 @@ Responde SOLO con el JSON, sin texto adicional.";
 
             var requestBody = new
             {
-                model = "gpt-4o-mini",
-                messages = new object[]
+                contents = new[]
                 {
-                    new { role = "system", content = "Eres un escritor experto en literatura infantil. Respondes SOLO con JSON válido, sin texto adicional." },
-                    new { role = "user", content = prompt }
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new { text = prompt }
+                        }
+                    }
                 },
-                temperature = 0.7,
-                max_tokens = 2000
+                generationConfig = new
+                {
+                    temperature = 0.7f,
+                    maxOutputTokens = 6000
+                }
             };
 
-            var apiUrl = "https://api.openai.com/v1/chat/completions";
             var jsonContent = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={_iaSettings.GeminiApiKey}";
             
             // Sistema de reintentos
             for (int intento = 0; intento < 3; intento++)
             {
                 try
                 {
-                    _logger.LogInformation("🔄 Intento {Intento}/3 de llamada a OpenAI para lectura", intento + 1);
+                    _logger.LogInformation("🔄 Intento {Intento}/3 de llamada a Gemini para lectura", intento + 1);
                     
-                    var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
-                    request.Headers.Add("Authorization", $"Bearer {_iaSettings.OpenAIApiKey}");
-                    request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                    
-                    var response = await _httpClient.SendAsync(request);
+                    var response = await _httpClient.PostAsync(apiUrl, content);
+                    var responseContent = await response.Content.ReadAsStringAsync();
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        _logger.LogWarning("❌ Error en OpenAI API (Status {Status}): {Error}", 
-                            response.StatusCode, errorContent);
+                        _logger.LogWarning("❌ Error en Gemini API (Status {Status}): {Error}", 
+                            response.StatusCode, responseContent);
                         
                         if (intento < 2)
                         {
                             await Task.Delay((int)Math.Pow(2, intento) * 1000);
+                            content = new StringContent(jsonContent, Encoding.UTF8, "application/json"); // Renew content
                             continue;
                         }
-                        throw new Exception($"Error en API de OpenAI: {response.StatusCode} - {errorContent}");
+                        throw new HttpRequestException($"Error en API de Gemini: {response.StatusCode} - {responseContent}");
                     }
-
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var responseJson = JsonDocument.Parse(responseContent);
                     
-                    _logger.LogInformation("✅ Respuesta de OpenAI recibida exitosamente");
-
-                    // Extraer el texto de la respuesta de OpenAI
-                    var textoRespuesta = responseJson.RootElement
-                        .GetProperty("choices")[0]
-                        .GetProperty("message")
-                        .GetProperty("content")
-                        .GetString() ?? "";
-
-                    // Extraer JSON de la respuesta
-                    var startIdx = textoRespuesta.IndexOf('{');
-                    var endIdx = textoRespuesta.LastIndexOf('}') + 1;
-                    
-                    if (startIdx >= 0 && endIdx > startIdx)
+                    try 
                     {
-                        var jsonText = textoRespuesta.Substring(startIdx, endIdx - startIdx);
-                        var lecturaJson = JsonDocument.Parse(jsonText);
+                        var responseJson = JsonDocument.Parse(responseContent);
+                        _logger.LogInformation("✅ Respuesta de Gemini recibida exitosamente");
+
+                        if (!responseJson.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
+                        {
+                            throw new Exception("La respuesta de Gemini no contiene 'candidates'.");
+                        }
+
+                        // Extraer el texto de la respuesta de Gemini
+                        var textoRespuesta = candidates[0]
+                            .GetProperty("content")
+                            .GetProperty("parts")[0]
+                            .GetProperty("text")
+                            .GetString() ?? "";
+
+                        // Extraer JSON de la respuesta
+                        var startIdx = textoRespuesta.IndexOf('{');
+                        var endIdx = textoRespuesta.LastIndexOf('}') + 1;
                         
-                        var titulo = lecturaJson.RootElement.GetProperty("titulo").GetString() ?? "Historia Mágica";
-                        var contenido = lecturaJson.RootElement.GetProperty("contenido").GetString() ?? "";
+                        if (startIdx >= 0 && endIdx > startIdx)
+                        {
+                            var jsonText = textoRespuesta.Substring(startIdx, endIdx - startIdx);
+                            var lecturaJson = JsonDocument.Parse(jsonText);
+                            
+                            var titulo = lecturaJson.RootElement.GetProperty("titulo").GetString() ?? "Historia Mágica";
+                            var contenido = lecturaJson.RootElement.GetProperty("contenido").GetString() ?? "";
 
-                        _logger.LogInformation("📖 Lectura generada: {Titulo} ({Length} chars)", titulo, contenido.Length);
-                        return (titulo, contenido);
+                            _logger.LogInformation("📖 Lectura generada: {Titulo} ({Length} chars)", titulo, contenido.Length);
+                            return (titulo, contenido);
+                        }
+
+                        throw new InvalidOperationException($"No se pudo extraer el JSON. Raw text: {textoRespuesta}");
                     }
-
-                    throw new Exception("No se pudo extraer el JSON de la respuesta de OpenAI");
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Parseo fallido. RAW Response: {RawResponse}", responseContent);
+                        throw;
+                    }
                 }
                 catch (Exception ex) when (intento < 2)
                 {
@@ -183,14 +202,14 @@ Responde SOLO con el JSON, sin texto adicional.";
                 }
             }
             
-            throw new Exception("No se pudo generar la lectura después de 3 intentos");
+            throw new InvalidOperationException("No se pudo generar la lectura después de 3 intentos");
         }
 
-        private async Task<string> GenerarImagenConHuggingFaceAsync(string titulo, PreferenciasLecturaDto preferencias)
+        private async Task<string> GenerarImagenConGeminiAsync(PreferenciasLecturaDto preferencias)
         {
             try
             {
-                _logger.LogInformation("🎨 Iniciando generación de imagen con Hugging Face");
+                _logger.LogInformation("🎨 Iniciando generación de imagen con Gemini 3.1");
                 
                 var temas = string.Join(", ", preferencias.Temas);
                 var personajes = string.Join(", ", preferencias.Personajes);
@@ -199,37 +218,70 @@ Responde SOLO con el JSON, sin texto adicional.";
 
                 _logger.LogInformation("📝 Prompt de imagen: {Prompt}", promptImagen);
 
-                var apiUrl = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0";
+                var apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={_iaSettings.GeminiApiKey}";
                 
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_iaSettings.HuggingFaceApiKey}");
 
-                var requestBody = new { inputs = promptImagen };
+
+
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new[] { new { text = promptImagen } }
+                        }
+                    }
+                };
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                _logger.LogInformation("📤 Enviando petición a Hugging Face API");
+                _logger.LogInformation("📤 Enviando petición a Gemini API");
                 var response = await _httpClient.PostAsync(apiUrl, content);
                 
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al generar imagen con Hugging Face - StatusCode: {StatusCode}, Response: {Response}", 
+                    _logger.LogError("❌ Error al generar imagen con Gemini - StatusCode: {StatusCode}, Response: {Response}", 
                         response.StatusCode, errorContent);
                     return "";
                 }
 
-                var imageBytes = await response.Content.ReadAsByteArrayAsync();
-                _logger.LogInformation("✅ Imagen recibida de Hugging Face, tamaño: {Size} bytes", imageBytes.Length);
+                var responseString = await response.Content.ReadAsStringAsync();
+                
+                // Extraer base64 de la respuesta
+                using var document = JsonDocument.Parse(responseString);
+                var parts = document.RootElement.GetProperty("candidates")[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0];
+                
+                string base64Image = "";
+                if (parts.TryGetProperty("inlineData", out var inlineData)) {
+                    base64Image = inlineData.GetProperty("data").GetString() ?? "";
+                } else if (parts.TryGetProperty("blob", out var blobData)) {
+                    base64Image = blobData.GetProperty("data").GetString() ?? "";
+                }
+                
+                if (string.IsNullOrEmpty(base64Image)) {
+                    _logger.LogError("No se encontró la imagen en la respuesta.");
+                    return "";
+                }
+                var imageBytes = Convert.FromBase64String(base64Image);
+                _logger.LogInformation("✅ Imagen recibida de Gemini, tamaño: {Size} bytes", imageBytes.Length);
                 
                 // Guardar imagen en wwwroot usando la ruta correcta
-                var fileName = $"lectura_{Guid.NewGuid()}.png";
-                var imagesFolder = Path.Combine(_environment.WebRootPath, "images", "lecturas");
+                var wwwroot = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var imagesFolder = Path.Combine(wwwroot, "images", "lecturas");
                 
                 // Crear directorio si no existe
-                Directory.CreateDirectory(imagesFolder);
+                if (!Directory.Exists(imagesFolder))
+                {
+                    Directory.CreateDirectory(imagesFolder);
+                }
                 
+                var fileName = $"lectura_{Guid.NewGuid()}.png";
                 var imagePath = Path.Combine(imagesFolder, fileName);
+                
                 await File.WriteAllBytesAsync(imagePath, imageBytes);
 
                 _logger.LogInformation("💾 Imagen guardada en: {ImagePath}", imagePath);
@@ -237,7 +289,7 @@ Responde SOLO con el JSON, sin texto adicional.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Excepción al generar imagen - Mensaje: {Message}", ex.Message);
+                _logger.LogError(ex, "❌ Error al guardar la imagen de Nano Banana");
                 return "";
             }
         }
@@ -284,7 +336,9 @@ Responde SOLO con el JSON, sin texto adicional.";
                 };
 
                 // Prompt específico para examen grupal
-                var prompt = $@"Crea un texto de tipo {tipoTexto} sobre el tema: ""{temaConcepto}"" para estudiantes de {gradoEscolar} grado de primaria ({edad} años).
+                var prompt = $@"Eres un experto en crear textos educativos para evaluación escolar. Respondes SOLO con JSON válido.
+                
+Crea un texto de tipo {tipoTexto} sobre el tema: ""{temaConcepto}"" para estudiantes de {gradoEscolar} grado de primaria ({edad} años).
 
 PARÁMETROS ESPECÍFICOS:
 - Longitud: {cantidadPalabras} palabras (±20 palabras)
@@ -309,85 +363,99 @@ Responde SOLO con el JSON, sin texto adicional.";
 
                 var requestBody = new
                 {
-                    model = "gpt-4o-mini",
-                    messages = new object[]
+                    contents = new[]
                     {
-                        new { role = "system", content = "Eres un experto en crear textos educativos para evaluación escolar. Respondes SOLO con JSON válido." },
-                        new { role = "user", content = prompt }
+                        new 
+                        { 
+                            parts = new[] { new { text = prompt } } 
+                        }
                     },
-                    temperature = 0.6, // Menos creatividad para evaluación
-                    max_tokens = 2500
+                    generationConfig = new
+                    {
+                        temperature = 0.6f,
+                        maxOutputTokens = 6000
+                    }
                 };
 
-                var apiUrl = "https://api.openai.com/v1/chat/completions";
+                var apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={_iaSettings.GeminiApiKey}";
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 
-                var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
-                request.Headers.Add("Authorization", $"Bearer {_iaSettings.OpenAIApiKey}");
-                request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.PostAsync(apiUrl, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Error al generar lectura con OpenAI: {Error}", errorContent);
+                    _logger.LogError("Error al generar lectura con Gemini: {Error}", errorContent);
                     return null;
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var responseJson = JsonDocument.Parse(responseContent);
-                
-                var textoRespuesta = responseJson.RootElement
-                    .GetProperty("choices")[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString() ?? "";
-
-                // Extraer JSON
-                var startIdx = textoRespuesta.IndexOf('{');
-                var endIdx = textoRespuesta.LastIndexOf('}') + 1;
-                
-                if (startIdx < 0 || endIdx <= startIdx)
+                try
                 {
-                    _logger.LogError("No se pudo extraer JSON de la respuesta");
-                    return null;
-                }
+                    var responseJson = JsonDocument.Parse(responseContent);
+                    
+                    if (!responseJson.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
+                    {
+                        _logger.LogError("La respuesta de Gemini no contiene 'candidates'. RAW: {Raw}", responseContent);
+                        return null;
+                    }
 
-                var jsonText = textoRespuesta.Substring(startIdx, endIdx - startIdx);
-                var lecturaJson = JsonDocument.Parse(jsonText);
-                
-                var titulo = lecturaJson.RootElement.GetProperty("titulo").GetString() ?? temaConcepto;
-                var contenido = lecturaJson.RootElement.GetProperty("contenido").GetString() ?? "";
+                    var textoRespuesta = candidates[0]
+                        .GetProperty("content")
+                        .GetProperty("parts")[0]
+                        .GetProperty("text")
+                        .GetString() ?? "";
 
-                // Generar imagen
-                var urlImagen = await GenerarImagenExamenGrupalAsync(temaConcepto);
+                    // Extraer JSON
+                    var startIdx = textoRespuesta.IndexOf('{');
+                    var endIdx = textoRespuesta.LastIndexOf('}') + 1;
+                    
+                    if (startIdx < 0 || endIdx <= startIdx)
+                    {
+                        _logger.LogError("No se pudo extraer JSON de la respuesta. RAW: {Raw}", textoRespuesta);
+                        return null;
+                    }
 
-                // Crear entidad Lectura
-                var lectura = new Models.Entities.Lectura
-                {
-                    EstudianteId = null, // Exámenes grupales no tienen estudiante específico
-                    Titulo = titulo,
-                    Contenido = contenido,
-                    TipoLectura = tipoTexto,
-                    Temas = temaConcepto,
-                    Personajes = "Variados", // Para exámenes grupales
-                    Escenario = "Educativo",
-                    Longitud = longitudTexto,
-                    Emocion = "Educativa",
-                    Proposito = "Evaluación",
-                    Estado = "generada",
-                    FechaCreacion = DateTime.UtcNow,
-                    UrlImagen = urlImagen
-                };
+                    var jsonText = textoRespuesta.Substring(startIdx, endIdx - startIdx);
+                    var lecturaJson = JsonDocument.Parse(jsonText);
+                    
+                    var titulo = lecturaJson.RootElement.GetProperty("titulo").GetString() ?? temaConcepto;
+                    var contenido = lecturaJson.RootElement.GetProperty("contenido").GetString() ?? "";
 
-                // Guardar la lectura en la base de datos para obtener el Id
-                _context.Lecturas.Add(lectura);
+                    // Generar imagen
+                    var urlImagen = string.Empty;
+
+                    // Crear entidad Lectura
+                    var lectura = new Models.Entities.Lectura
+                    {
+                        EstudianteId = null, // Exámenes grupales no tienen estudiante específico
+                        Titulo = titulo,
+                        Contenido = contenido,
+                        TipoLectura = tipoTexto,
+                        Temas = temaConcepto,
+                        Personajes = "Variados", // Para exámenes grupales
+                        Escenario = "Educativo",
+                        Longitud = longitudTexto,
+                        Emocion = "Educativa",
+                        Proposito = "Evaluación",
+                        Estado = "generada",
+                        FechaCreacion = DateTime.UtcNow,
+                        UrlImagen = urlImagen
+                    };
+
+                    // Guardar la lectura en la base de datos para obtener el Id
+                    _context.Lecturas.Add(lectura);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("✅ Lectura generada para examen grupal: {Titulo}", titulo);
-                return lectura;
-            }
+                return lectura;                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al generar lectura para examen grupal. RAW: {Raw}", responseContent);
+                    return null;
+                }            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al generar lectura para examen grupal");
@@ -399,14 +467,25 @@ Responde SOLO con el JSON, sin texto adicional.";
         {
             try
             {
+                _logger.LogInformation("🎨 Iniciando generación de imagen de examen grupal con Gemini 3.1");
+
                 var promptImagen = $"Educational illustration for children, {temaConcepto}, colorful, clear, detailed, high quality, professional";
 
-                var apiUrl = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0";
+                var apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={_iaSettings.GeminiApiKey}";
                 
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_iaSettings.HuggingFaceApiKey}");
 
-                var requestBody = new { inputs = promptImagen };
+
+
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new[] { new { text = promptImagen } }
+                        }
+                    }
+                };
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
@@ -414,17 +493,43 @@ Responde SOLO con el JSON, sin texto adicional.";
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("No se pudo generar imagen para examen grupal");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("No se pudo generar imagen (Status: {Status}), Error: {Error}", response.StatusCode, errorContent);
                     return "";
                 }
 
-                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+                var responseString = await response.Content.ReadAsStringAsync();
+                
+                // Extraer base64 de la respuesta
+                using var document = JsonDocument.Parse(responseString);
+                var parts = document.RootElement.GetProperty("candidates")[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0];
+                
+                string base64Image = "";
+                if (parts.TryGetProperty("inlineData", out var inlineData)) {
+                    base64Image = inlineData.GetProperty("data").GetString() ?? "";
+                } else if (parts.TryGetProperty("blob", out var blobData)) {
+                    base64Image = blobData.GetProperty("data").GetString() ?? ""; // Asumiendo que podria retornar text en un caso especial
+                }
+                
+                if (string.IsNullOrEmpty(base64Image)) {
+                    _logger.LogError("No se encontró la imagen en la respuesta.");
+                    return "";
+                }
+                var imageBytes = Convert.FromBase64String(base64Image);
+                
+                var wwwroot = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var imagesFolder = Path.Combine(wwwroot, "images", "examenes");
+                
+                if (!Directory.Exists(imagesFolder))
+                {
+                    Directory.CreateDirectory(imagesFolder);
+                }
                 
                 var fileName = $"examen_{Guid.NewGuid()}.png";
-                var imagesFolder = Path.Combine(_environment.WebRootPath, "images", "examenes");
-                Directory.CreateDirectory(imagesFolder);
-                
                 var imagePath = Path.Combine(imagesFolder, fileName);
+                
                 await File.WriteAllBytesAsync(imagePath, imageBytes);
 
                 return $"/images/examenes/{fileName}";

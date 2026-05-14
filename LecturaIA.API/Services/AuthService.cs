@@ -341,8 +341,9 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Role, usuario.TipoUsuario.ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["JwtSettings:SecretKey"] ?? "DefaultSecretKeyForDevelopment123456"));
+        var secretKey = _configuration["JwtSettings:SecretKey"]
+            ?? throw new InvalidOperationException("JwtSettings:SecretKey no está configurada. Use variables de entorno o appsettings.");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiracion = DateTime.UtcNow.AddHours(8);

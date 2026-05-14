@@ -1,5 +1,7 @@
+import { alertaError, alertaInformativa, promptTexto } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import AyudaContextual from '../components/AyudaContextual';
 import TutorialInicial from '../components/TutorialInicial';
 import { adminService, type UsuarioAdmin, type EstadisticasGenerales } from '../services/adminService';
@@ -7,6 +9,7 @@ import { ayudaService } from '../services/ayudaService';
 import { contenidoAyuda, tutorialAdmin } from '../data/contenidoAyuda';
 
 export default function AdminDashboard() {
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>([]);
   const [usuariosFiltrados, setUsuariosFiltrados] = useState<UsuarioAdmin[]>([]);
@@ -27,9 +30,21 @@ export default function AdminDashboard() {
   const [cargandoTutorial, setCargandoTutorial] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+
+    if (!isAuthenticated || !user) {
+      navigate('/docente'); // Admin login is through Docente page for now
+      return;
+    }
+
+    if (user.tipoUsuario !== 'Administrador') {
+      navigate('/');
+      return;
+    }
+
     cargarDatos();
     verificarPrimeraSesion();
-  }, []);
+  }, [isAuthenticated, user, authLoading, navigate]);
 
   const verificarPrimeraSesion = async () => {
     try {
@@ -82,7 +97,7 @@ export default function AdminDashboard() {
 
   const confirmarSuspension = async () => {
     if (!usuarioSeleccionado || !motivoSuspension.trim()) {
-      alert('Por favor ingrese un motivo válido');
+      alertaError('Por favor ingrese un motivo válido');
       return;
     }
 
@@ -92,9 +107,9 @@ export default function AdminDashboard() {
       setMotivoSuspension('');
       setUsuarioSeleccionado(null);
       await cargarDatos();
-      alert('Usuario suspendido correctamente');
+      alertaInformativa('Usuario suspendido correctamente');
     } catch (err: any) {
-      alert(err.response?.data?.mensaje || 'Error al suspender usuario');
+      alertaError(err.response?.data?.mensaje || 'Error al suspender usuario');
     }
   };
 
@@ -111,14 +126,14 @@ export default function AdminDashboard() {
       setShowModalReactivar(false);
       setUsuarioSeleccionado(null);
       await cargarDatos();
-      alert('Usuario reactivado correctamente');
+      alertaInformativa('Usuario reactivado correctamente');
     } catch (err: any) {
-      alert(err.response?.data?.mensaje || 'Error al reactivar usuario');
+      alertaError(err.response?.data?.mensaje || 'Error al reactivar usuario');
     }
   };
 
   const handleReiniciarPassword = async (usuario: UsuarioAdmin) => {
-    const motivo = prompt('Ingrese el motivo del reinicio de contraseña:');
+    const motivo = (await promptTexto('Ingrese el motivo del reinicio de contraseña:'));
     if (!motivo) return;
 
     try {
@@ -127,13 +142,12 @@ export default function AdminDashboard() {
       setUsuarioSeleccionado(usuario);
       setShowModalReiniciar(true);
     } catch (err: any) {
-      alert(err.response?.data?.mensaje || 'Error al reiniciar contraseña');
+      alertaError(err.response?.data?.mensaje || 'Error al reiniciar contraseña');
     }
   };
 
   const handleCerrarSesion = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     navigate('/docente');
   };
 

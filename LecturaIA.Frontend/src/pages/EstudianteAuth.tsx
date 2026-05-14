@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService, type RegistroEstudianteDto, type GradoOption } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
+import { useAsync } from '../hooks/useAsync';
+import { HTTP_STATUS, ROLES, GRADOS, TIMEOUTS, VALIDATION, DEFAULT_VALUES } from '../config/constants';
 
 export default function EstudianteAuth() {
+  const { login } = useAuth();
   const [modo, setModo] = useState<'login' | 'registro'>('login');
   const [grados, setGrados] = useState<GradoOption[]>([]);
   const [registroExitoso, setRegistroExitoso] = useState(false);
@@ -11,11 +15,16 @@ export default function EstudianteAuth() {
   
   const [formDataLogin, setFormDataLogin] = useState({ email: '', password: '' });
   const [formDataRegistro, setFormDataRegistro] = useState<RegistroEstudianteDto>({
-    email: '', password: '', confirmarPassword: '', nombreCompleto: '', grado: 4, edad: 9
+    email: '', 
+    password: '', 
+    confirmarPassword: '', 
+    nombreCompleto: '', 
+    grado: DEFAULT_VALUES.ESTUDIANTE_GRADO, 
+    edad: DEFAULT_VALUES.ESTUDIANTE_EDAD
   });
 
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { loading, execute } = useAsync();
   const navigate = useNavigate();
 
   useEffect(() => { if (modo === 'registro') cargarGrados(); }, [modo]);
@@ -24,42 +33,65 @@ export default function EstudianteAuth() {
     try {
       const gradosData = await authService.obtenerGrados();
       setGrados(gradosData);
-    } catch { setGrados([{ value: 4, label: '4to Grado' }, { value: 5, label: '5to Grado' }, { value: 6, label: '6to Grado' }]); }
+    } catch { 
+      setGrados([
+        { value: GRADOS.CUARTO, label: '4to Grado' }, 
+        { value: GRADOS.QUINTO, label: '5to Grado' }, 
+        { value: GRADOS.SEXTO, label: '6to Grado' }
+      ]); 
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     try {
-      const resultado = await authService.login(formDataLogin);
-      if ('requiereVerificacion' in resultado) { setError('Este acceso es solo para estudiantes'); return; }
-      if (resultado.tipoUsuario !== 'Estudiante') { setError('Este acceso es solo para estudiantes'); return; }
-      authService.guardarSesion(resultado);
-      navigate('/estudiante/dashboard');
+      await execute(async () => {
+        const resultado = await authService.login(formDataLogin);
+        if ('requiereVerificacion' in resultado) { throw new Error('Este acceso es solo para estudiantes'); }
+        if (resultado.tipoUsuario !== ROLES.ESTUDIANTE) { throw new Error('Este acceso es solo para estudiantes'); }
+        
+        // Adaptar respuesta del backend al formato esperado por el frontend
+        // El backend devuelve 'fechaExpiracion' pero el frontend espera 'expiracion'
+        const usuarioAdaptado = {
+          ...resultado,
+          // @ts-ignore - Propiedad dinámica
+          expiracion: resultado.fechaExpiracion || (resultado as any).expiracion || '' // Fallback
+        };
+        
+        login(usuarioAdaptado as any); // Usa el contexto para guardar sesión
+        
+        // Aseguramos que la navegación espere un frame para que el contexto se actualice
+        setTimeout(() => navigate('/estudiante/dashboard'), TIMEOUTS.LOGIN_REDIRECT_DELAY);
+        return resultado;
+      });
     } catch (err: any) {
-      if (err.response?.status === 403 && err.response?.data?.cuentaSuspendida) {
+      if (err.message === 'Este acceso es solo para estudiantes') {
+        setError(err.message);
+      } else if (err.response?.status === HTTP_STATUS.FORBIDDEN && err.response?.data?.cuentaSuspendida) {
         setError('Tu cuenta ha sido suspendida. Contacta al administrador para más información.');
       } else {
         setError(err.response?.data?.mensaje || 'Correo o contraseña incorrectos');
       }
-    } finally { setLoading(false); }
+    }
   };
 
   const handleRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aceptaPoliticas) { setError('Debes aceptar las políticas de privacidad para continuar'); return; }
     if (formDataRegistro.password !== formDataRegistro.confirmarPassword) { setError('Las contraseñas no coinciden'); return; }
-    if (formDataRegistro.password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres'); return; }
-    setLoading(true);
+    if (formDataRegistro.password.length < VALIDATION.MIN_PASSWORD_LENGTH) { setError(`La contraseña debe tener al menos ${VALIDATION.MIN_PASSWORD_LENGTH} caracteres`); return; }
     setError('');
+    
     try {
-      await authService.registrarEstudiante(formDataRegistro);
-      setEmailRegistrado(formDataRegistro.email);
-      setRegistroExitoso(true);
+      await execute(async () => {
+        await authService.registrarEstudiante(formDataRegistro);
+        setEmailRegistrado(formDataRegistro.email);
+        setRegistroExitoso(true);
+      });
     } catch (err: any) {
       setError(err.response?.data?.mensaje || 'Error en el registro');
-    } finally { setLoading(false); }
+    }
   };
 
   if (registroExitoso) {

@@ -27,7 +27,7 @@ public class RegistroEstudianteDto : IValidatableObject
 
     [Required(ErrorMessage = "La edad es obligatoria")]
     [Range(5, 100, ErrorMessage = "La edad debe estar entre 5 y 100 años")]
-    public int Edad { get; set; }
+    public required int Edad { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

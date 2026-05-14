@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { perfilService, type PerfilUsuario } from '../services/perfilService';
+import { perfilService } from '../services/perfilService';
+import type { PerfilUsuario } from '../types/user.types';
 
 interface MiPerfilModalProps {
   isOpen: boolean;
@@ -21,13 +22,11 @@ export default function MiPerfilModal({ isOpen, onClose }: MiPerfilModalProps) {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔄 Cargando perfil...');
       const data = await perfilService.obtenerPerfil();
-      console.log('✅ Perfil cargado:', data);
       setPerfil(data);
     } catch (err: any) {
-      console.error('❌ Error al cargar perfil:', err);
-      console.error('Response:', err.response);
+      console.error('Error al cargar perfil:', err);
+      //console.error('Response:', err.response);
       setError(err.response?.data?.mensaje || 'Error al cargar el perfil');
     } finally {
       setIsLoading(false);

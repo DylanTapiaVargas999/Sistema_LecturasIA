@@ -100,8 +100,8 @@ namespace LecturaIA.API.Services
                     stopwatch.ElapsedMilliseconds, prompt.Length);
 
                 var llamadaStart = stopwatch.ElapsedMilliseconds;
-                var respuestaIA = await LlamarOpenAIAsync(prompt);
-                _logger.LogInformation("⏱️ Llamada a OpenAI completada en {Ms}ms", 
+                var respuestaIA = await LlamarGeminiAsync(prompt);
+                _logger.LogInformation("⏱️ Llamada a Gemini completada en {Ms}ms", 
                     stopwatch.ElapsedMilliseconds - llamadaStart);
 
                 var parseStart = stopwatch.ElapsedMilliseconds;
@@ -271,7 +271,7 @@ FORMATO DE RESPUESTA (JSON):
 
 Genera solo el JSON:";
 
-                var respuestaIA = await LlamarOpenAIAsync(prompt);
+                var respuestaIA = await LlamarGeminiAsync(prompt);
                 return ParsearEvaluacionRespuestaAbierta(respuestaIA);
             }
             catch (Exception ex)
@@ -328,7 +328,7 @@ LONGITUD: Cada campo debe tener 2-3 oraciones.
 
 Genera SOLO el JSON (sin texto adicional antes o después):";
 
-                var retroalimentacion = await LlamarOpenAIAsync(prompt);
+                var retroalimentacion = await LlamarGeminiAsync(prompt);
                 var textoLimpio = LimpiarTextoRespuesta(retroalimentacion);
                 
                 _logger.LogInformation("🔍 Retroalimentación generada (limpia): {Retro}", textoLimpio);
@@ -346,29 +346,24 @@ Genera SOLO el JSON (sin texto adicional antes o después):";
         // MÉTODOS AUXILIARES
         // ========================================
 
-        private async Task<string> LlamarOpenAIAsync(string prompt, int maxReintentos = 3)
+        private async Task<string> LlamarGeminiAsync(string prompt, int maxReintentos = 3)
         {
-            // USANDO OPENAI GPT-4O-MINI - Rápido y confiable
-            var apiUrl = "https://api.openai.com/v1/chat/completions";
+            var apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={_iaSettings.GeminiApiKey}";
 
             var requestBody = new
             {
-                model = "gpt-4o-mini",
-                messages = new[]
+                contents = new[]
                 {
                     new
                     {
-                        role = "system",
-                        content = "Eres un experto en crear preguntas de comprensión lectora para niños. Respondes SOLO con JSON válido, sin texto adicional."
-                    },
-                    new
-                    {
-                        role = "user",
-                        content = prompt
+                        parts = new[] { new { text = "Instrucción del sistema: Eres un experto en evaluar comprensión lectora para niños. Respondes SOLO con JSON válido, sin texto oculto ni markdown.\n\n" + prompt } }
                     }
                 },
-                temperature = 0.3,
-                max_tokens = 1500
+                generationConfig = new
+                {
+                    temperature = 0.3f,
+                    maxOutputTokens = 6000
+                }
             };
 
             var jsonContent = JsonSerializer.Serialize(requestBody);
@@ -378,14 +373,11 @@ Genera SOLO el JSON (sin texto adicional antes o después):";
             {
                 try
                 {
-                    _logger.LogInformation("Intento {Intento}/{Max} de llamada a OpenAI API", intento + 1, maxReintentos);
+                    _logger.LogInformation("Intento {Intento}/{Max} de llamada a Gemini API", intento + 1, maxReintentos);
                     
                     var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                    var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
-                    request.Headers.Add("Authorization", $"Bearer {_iaSettings.OpenAIApiKey}");
-                    request.Content = content;
                     
-                    var response = await _httpClient.SendAsync(request);
+                    var response = await _httpClient.PostAsync(apiUrl, content);
                     
                     if (response.IsSuccessStatusCode)
                     {
@@ -393,21 +385,20 @@ Genera SOLO el JSON (sin texto adicional antes o después):";
                         var doc = JsonDocument.Parse(responseJson);
 
                         var resultado = doc.RootElement
-                            .GetProperty("choices")[0]
-                            .GetProperty("message")
+                            .GetProperty("candidates")[0]
                             .GetProperty("content")
+                            .GetProperty("parts")[0]
+                            .GetProperty("text")
                             .GetString() ?? "";
 
-                        _logger.LogInformation("✅ Respuesta de OpenAI recibida exitosamente");
+                        _logger.LogInformation("✅ Respuesta de Gemini recibida exitosamente");
                         return resultado;
                     }
                     
-                    // Si no es exitoso, loguear y reintentar
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("❌ Error en OpenAI API (Status {Status}): {Error}", 
+                    _logger.LogWarning("❌ Error en Gemini API (Status {Status}): {Error}", 
                         response.StatusCode, errorContent);
                     
-                    // Si es error 4xx (error del cliente), no reintentar
                     if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
                     {
                         throw new Exception($"Error en API de Gemini: {response.StatusCode} - {errorContent}");
@@ -616,24 +607,23 @@ Responde SOLO con el JSON, sin texto adicional.";
 
                 var requestBody = new
                 {
-                    model = "gpt-4o-mini",
-                    messages = new object[]
+                    contents = new[]
                     {
-                        new { role = "system", content = "Eres un experto en crear evaluaciones educativas. Respondes SOLO con JSON válido." },
-                        new { role = "user", content = prompt }
+                        new { parts = new[] { new { text = "Instrucción del sistema: Eres un experto en crear evaluaciones educativas. Respondes SOLO con JSON válido.\n\n" + prompt } } }
                     },
-                    temperature = 0.5,
-                    max_tokens = 3000
+                    generationConfig = new
+                    {
+                        temperature = 0.5f,
+                        maxOutputTokens = 6000
+                    }
                 };
 
-                var apiUrl = "https://api.openai.com/v1/chat/completions";
+                var apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={_iaSettings.GeminiApiKey}";
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 
-                var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
-                request.Headers.Add("Authorization", $"Bearer {_iaSettings.OpenAIApiKey}");
-                request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.PostAsync(apiUrl, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -643,23 +633,32 @@ Responde SOLO con el JSON, sin texto adicional.";
                 }
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var responseJson = JsonDocument.Parse(responseContent);
                 
-                var textoRespuesta = responseJson.RootElement
-                    .GetProperty("choices")[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString() ?? "";
-
-                // Extraer JSON
-                var startIdx = textoRespuesta.IndexOf('{');
-                var endIdx = textoRespuesta.LastIndexOf('}') + 1;
-                
-                if (startIdx < 0 || endIdx <= startIdx)
+                try
                 {
-                    _logger.LogError("No se pudo extraer JSON del cuestionario");
-                    return null;
-                }
+                    var responseJson = JsonDocument.Parse(responseContent);
+                    
+                    if (!responseJson.RootElement.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
+                    {
+                        _logger.LogError("La respuesta de Gemini no contiene 'candidates'. RAW: {Raw}", responseContent);
+                        return null;
+                    }
+
+                    var textoRespuesta = candidates[0]
+                        .GetProperty("content")
+                        .GetProperty("parts")[0]
+                        .GetProperty("text")
+                        .GetString() ?? "";
+
+                    // Extraer JSON
+                    var startIdx = textoRespuesta.IndexOf('{');
+                    var endIdx = textoRespuesta.LastIndexOf('}') + 1;
+                    
+                    if (startIdx < 0 || endIdx <= startIdx)
+                    {
+                        _logger.LogError("No se pudo extraer JSON del cuestionario. RAW: {Raw}", textoRespuesta);
+                        return null;
+                    }
 
                 var jsonText = textoRespuesta.Substring(startIdx, endIdx - startIdx);
                 var cuestionarioJson = JsonDocument.Parse(jsonText);
@@ -716,6 +715,12 @@ Responde SOLO con el JSON, sin texto adicional.";
 
                 _logger.LogInformation("✅ Cuestionario generado con {CantidadPreguntas} preguntas", cuestionario.Preguntas.Count);
                 return cuestionario;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al parsear el JSON del cuestionario. RAW: {Raw}", responseContent);
+                    return null;
+                }
             }
             catch (Exception ex)
             {

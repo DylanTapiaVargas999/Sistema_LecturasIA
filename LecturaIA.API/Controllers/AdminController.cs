@@ -17,7 +17,10 @@ public class AdminController : ControllerBase
         _adminService = adminService;
     }
 
-    // GET: api/admin/usuarios?email=texto
+    /// <summary>
+    /// Obtiene la lista de usuarios administrados, filtrando opcionalmente por email.
+    /// </summary>
+    /// <param name="email">Email a filtrar (opcional)</param>
     [HttpGet("usuarios")]
     public async Task<ActionResult<List<UsuarioAdminDto>>> ObtenerUsuarios([FromQuery] string? email = null)
     {
@@ -25,43 +28,54 @@ public class AdminController : ControllerBase
         return Ok(usuarios);
     }
 
-    // POST: api/admin/usuarios/suspender
+    /// <summary>
+    /// Suspende un usuario dado su información.
+    /// </summary>
     [HttpPost("usuarios/suspender")]
     public async Task<ActionResult> SuspenderUsuario([FromBody] SuspenderUsuarioDto dto)
     {
         var resultado = await _adminService.SuspenderUsuario(dto);
-
         if (!resultado)
+        {
+            // Fail fast: retorna inmediatamente si falla
             return BadRequest(new { mensaje = "No se pudo suspender el usuario" });
-
+        }
         return Ok(new { mensaje = "Usuario suspendido correctamente" });
     }
 
-    // POST: api/admin/usuarios/reactivar
+    /// <summary>
+    /// Reactiva un usuario dado su información.
+    /// </summary>
     [HttpPost("usuarios/reactivar")]
     public async Task<ActionResult> ReactivarUsuario([FromBody] ReactivarUsuarioDto dto)
     {
         var resultado = await _adminService.ReactivarUsuario(dto);
-
         if (!resultado)
+        {
+            // Fail fast: retorna inmediatamente si falla
             return BadRequest(new { mensaje = "No se pudo reactivar el usuario" });
-
+        }
         return Ok(new { mensaje = "Usuario reactivado correctamente" });
     }
 
-    // POST: api/admin/usuarios/reiniciar-password
+    /// <summary>
+    /// Reinicia la contraseña de un usuario.
+    /// </summary>
     [HttpPost("usuarios/reiniciar-password")]
     public async Task<ActionResult<ReiniciarPasswordResponseDto>> ReiniciarPassword([FromBody] ReiniciarPasswordDto dto)
     {
         var resultado = await _adminService.ReiniciarPassword(dto);
-
         if (!resultado.Exito)
+        {
+            // Fail fast: retorna inmediatamente si falla
             return BadRequest(resultado);
-
+        }
         return Ok(resultado);
     }
 
-    // GET: api/admin/estadisticas
+    /// <summary>
+    /// Obtiene estadísticas generales para el panel de administración.
+    /// </summary>
     [HttpGet("estadisticas")]
     public async Task<ActionResult<EstadisticasAdminDto>> ObtenerEstadisticas()
     {

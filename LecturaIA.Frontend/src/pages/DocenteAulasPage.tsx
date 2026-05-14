@@ -1,3 +1,4 @@
+import { alertaError, alertaInformativa } from '../utils/alerts';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aulasService, type AulaDetalle } from '../services/aulasService';
@@ -35,7 +36,7 @@ export default function DocenteAulasPage() {
       setAulaEliminar(null);
       cargarAulas(); // Recargar la lista
     } catch (err: any) {
-      alert(err.response?.data?.mensaje || 'Error al eliminar el aula');
+      alertaError(err.response?.data?.mensaje || 'Error al eliminar el aula');
     }
   };
 
@@ -132,7 +133,7 @@ export default function DocenteAulasPage() {
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(aula.codigoVinculacion);
-                          alert('¡Código copiado al portapapeles!');
+                          alertaInformativa('¡Código copiado al portapapeles!');
                         }}
                         className="p-2 text-gray-600 hover:text-blue-600 transition"
                         title="Copiar código"

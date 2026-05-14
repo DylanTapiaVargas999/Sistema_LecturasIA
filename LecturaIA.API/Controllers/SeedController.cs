@@ -17,16 +17,17 @@ public class SeedController : ControllerBase
     }
 
     // POST: api/seed/admin
+    /// <summary>
+    /// Crea un usuario administrador si no existe uno con el mismo email.
+    /// </summary>
     [HttpPost("admin")]
     public async Task<ActionResult> CrearAdministrador([FromBody] CrearAdminRequest request)
     {
-        // Verificar si ya existe un admin con ese email
+        // Fail fast: email ya registrado
         if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
         {
             return BadRequest(new { mensaje = "Ya existe un usuario con ese email" });
         }
-
-        // Crear usuario administrador
         var admin = new Usuario
         {
             Email = request.Email,
@@ -37,10 +38,8 @@ public class SeedController : ControllerBase
             Activo = true,
             EmailVerificado = true // Admin no necesita verificar email
         };
-
         _context.Usuarios.Add(admin);
         await _context.SaveChangesAsync();
-
         return Ok(new
         {
             mensaje = "Administrador creado exitosamente",

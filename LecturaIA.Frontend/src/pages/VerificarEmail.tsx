@@ -1,3 +1,4 @@
+import { alertaError, alertaInformativa } from '../utils/alerts';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -34,15 +35,15 @@ export default function VerificarEmail() {
 
   const handleReenviar = async () => {
     if (!email) {
-      alert('Por favor ingresa tu correo electrónico');
+      alertaError('Por favor ingresa tu correo electrónico');
       return;
     }
 
     try {
       await authService.reenviarVerificacion(email);
-      alert('Se ha enviado un nuevo email de verificación');
+      alertaInformativa('Se ha enviado un nuevo email de verificación');
     } catch (err: any) {
-      alert(err.response?.data?.mensaje || 'Error al reenviar verificación');
+      alertaError(err.response?.data?.mensaje || 'Error al reenviar verificación');
     }
   };
 

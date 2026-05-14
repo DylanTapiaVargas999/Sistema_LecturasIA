@@ -1,18 +1,14 @@
+import { alertaError } from '../utils/alerts';
 import { useState } from 'react';
+import type { PreferenciasLectura } from '../types/reading.types';
+import { UI_CONFIG } from '../config/constants';
+
+export type { PreferenciasLectura };
 
 interface EncuestaGuiadaProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (preferencias: PreferenciasLectura) => void;
-}
-
-export interface PreferenciasLectura {
-  temas: string[];
-  personajes: string[];
-  escenario: string;
-  longitud: string;
-  emocion: string;
-  proposito: string;
 }
 
 export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: EncuestaGuiadaProps) {
@@ -34,6 +30,7 @@ export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: Enc
   const personajes = [
     'Niños / niñas', 'Animales', 'Robots', 'Aliens', 'Héroes o heroínas', 'Magos o hadas'
   ];
+
 
   const escenarios = [
     'En un bosque o naturaleza',
@@ -66,30 +63,20 @@ export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: Enc
     'Relajarme'
   ];
 
-  const handleToggleTema = (tema: string) => {
-    if (preferencias.temas.includes(tema)) {
+  const handleToggleSelection = (
+    key: keyof Pick<PreferenciasLectura, 'temas' | 'personajes'>,
+    value: string
+  ) => {
+    const list = preferencias[key];
+    if (list.includes(value)) {
       setPreferencias({
         ...preferencias,
-        temas: preferencias.temas.filter(t => t !== tema)
+        [key]: list.filter(item => item !== value)
       });
-    } else if (preferencias.temas.length < 2) {
+    } else if (list.length < UI_CONFIG.MAX_SURVEY_SELECTIONS) {
       setPreferencias({
         ...preferencias,
-        temas: [...preferencias.temas, tema]
-      });
-    }
-  };
-
-  const handleTogglePersonaje = (personaje: string) => {
-    if (preferencias.personajes.includes(personaje)) {
-      setPreferencias({
-        ...preferencias,
-        personajes: preferencias.personajes.filter(p => p !== personaje)
-      });
-    } else if (preferencias.personajes.length < 2) {
-      setPreferencias({
-        ...preferencias,
-        personajes: [...preferencias.personajes, personaje]
+        [key]: [...list, value]
       });
     }
   };
@@ -97,23 +84,23 @@ export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: Enc
   const handleSiguiente = () => {
     // Validaciones por paso
     if (paso === 1 && preferencias.temas.length === 0) {
-      alert('Por favor selecciona al menos un tema');
+      alertaError('Por favor selecciona al menos un tema');
       return;
     }
     if (paso === 2 && preferencias.personajes.length === 0) {
-      alert('Por favor selecciona al menos un personaje');
+      alertaError('Por favor selecciona al menos un personaje');
       return;
     }
     if (paso === 3 && !preferencias.escenario) {
-      alert('Por favor selecciona un escenario');
+      alertaError('Por favor selecciona un escenario');
       return;
     }
     if (paso === 4 && !preferencias.longitud) {
-      alert('Por favor selecciona una longitud');
+      alertaError('Por favor selecciona una longitud');
       return;
     }
     if (paso === 5 && !preferencias.emocion) {
-      alert('Por favor selecciona una emoción');
+      alertaError('Por favor selecciona una emoción');
       return;
     }
 
@@ -124,7 +111,7 @@ export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: Enc
 
   const handleEnviar = () => {
     if (!preferencias.proposito) {
-      alert('Por favor selecciona un propósito');
+      alertaError('Por favor selecciona un propósito');
       return;
     }
     onComplete(preferencias);
@@ -171,7 +158,7 @@ export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: Enc
                 {temas.map((tema) => (
                   <button
                     key={tema}
-                    onClick={() => handleToggleTema(tema)}
+                    onClick={() => handleToggleSelection('temas', tema)}
                     className={`p-4 rounded-lg border-2 text-left transition ${
                       preferencias.temas.includes(tema)
                         ? 'border-blue-600 bg-blue-50 text-blue-900 font-semibold'
@@ -217,7 +204,7 @@ export default function EncuestaGuiadaModal({ isOpen, onClose, onComplete }: Enc
                 {personajes.map((personaje) => (
                   <button
                     key={personaje}
-                    onClick={() => handleTogglePersonaje(personaje)}
+                    onClick={() => handleToggleSelection('personajes', personaje)}
                     className={`p-4 rounded-lg border-2 text-left transition ${
                       preferencias.personajes.includes(personaje)
                         ? 'border-blue-600 bg-blue-50 text-blue-900 font-semibold'

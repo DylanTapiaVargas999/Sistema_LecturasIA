@@ -23,23 +23,23 @@ public class PasswordController : ControllerBase
     /// <summary>
     /// Cambiar contraseña del usuario autenticado (solo Estudiante o Docente)
     /// </summary>
+    /// <summary>
+    /// Cambia la contraseña del usuario autenticado (solo Estudiante o Docente).
+    /// </summary>
     [HttpPost("cambiar")]
     public async Task<IActionResult> CambiarPassword([FromBody] CambiarPasswordDto dto)
     {
         try
         {
             var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
             if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
             {
+                // Fail fast: token inválido
                 return Unauthorized(new { mensaje = "Token inválido" });
             }
-
             var (exito, mensaje) = await _passwordService.CambiarPassword(usuarioId, dto);
-
             if (!exito)
                 return BadRequest(new { mensaje });
-
             return Ok(new { mensaje });
         }
         catch (Exception ex)

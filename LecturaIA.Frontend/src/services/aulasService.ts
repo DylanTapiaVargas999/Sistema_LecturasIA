@@ -1,113 +1,69 @@
-import axios from 'axios';
+import api from '../config/api';
+import type { AulaDetalle, EstudianteAula, CrearAulaDto } from '../types/classroom.types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
-const API_URL = `${BASE_URL}/api`;
-
-// ===== TIPOS =====
-
-export interface AulaDetalle {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  codigoVinculacion: string;
-  nombreDocente: string;
-  cantidadEstudiantes: number;
-  fechaCreacion: string;
-}
-
-export interface EstudianteAula {
-  estudianteId: number;
-  nombreCompleto: string;
-  email: string;
-  grado?: string;
-  fechaVinculacion: string;
-  tareasDiarias: number;
-}
-
-export interface CrearAulaDto {
-  nombre: string;
-  descripcion?: string;
-}
+export type { AulaDetalle, EstudianteAula, CrearAulaDto };
 
 // ===== FUNCIONES PARA DOCENTES =====
 
 /**
- * Obtiene todas las aulas del docente autenticado
+ * Obtiene todas las aulas creadas por el docente actualmente autenticado.
+ * @returns Lista de aulas con sus detalles básicos.
  */
 export async function obtenerMisAulas(): Promise<AulaDetalle[]> {
-  const token = localStorage.getItem('token');
-  const response = await axios.get(`${API_URL}/Aulas/mis-aulas`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  const response = await api.get<AulaDetalle[]>('/Aulas/mis-aulas');
   return response.data;
 }
 
 /**
- * Crear un aula nueva (Docente)
+ * Crea una nueva aula virtual para un docente.
+ * @param dto Datos necesarios para crear el aula (nombre, grado, etc.).
+ * @returns El objeto del aula recién creada.
  */
 export async function crearAula(dto: CrearAulaDto): Promise<AulaDetalle> {
-  const token = localStorage.getItem('token');
-  const response = await axios.post(`${API_URL}/Aulas/crear`, dto, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
+  const response = await api.post<AulaDetalle>('/Aulas/crear', dto);
   return response.data;
 }
 
 /**
- * Obtiene los detalles de un aula
+ * Obtiene la información detallada de un aula específica.
+ * @param id ID del aula.
+ * @returns Detalles del aula.
  */
 export async function obtenerAula(id: number): Promise<AulaDetalle> {
-  const token = localStorage.getItem('token');
-  const response = await axios.get(`${API_URL}/Aulas/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  const response = await api.get<AulaDetalle>(`/Aulas/${id}`);
   return response.data;
 }
 
 /**
- * Obtiene los estudiantes de un aula (Docente)
+ * Obtiene la lista de estudiantes inscritos en un aula específica.
+ * @param aulaId ID del aula.
+ * @returns Lista de estudiantes.
  */
 export async function obtenerEstudiantesAula(aulaId: number): Promise<EstudianteAula[]> {
-  const token = localStorage.getItem('token');
-  const response = await axios.get(`${API_URL}/Aulas/${aulaId}/estudiantes`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  const response = await api.get<EstudianteAula[]>(`/Aulas/${aulaId}/estudiantes`);
   return response.data;
 }
 
 /**
- * Elimina un aula (Docente)
+ * Elimina un aula del sistema.
+ * @param id ID del aula a eliminar.
  */
 export async function eliminarAula(id: number): Promise<void> {
-  const token = localStorage.getItem('token');
-  await axios.delete(`${API_URL}/Aulas/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  await api.delete(`/Aulas/${id}`);
 }
 
 /**
- * Remueve un estudiante de un aula (Docente)
+ * Da de baja a un estudiante de un aula específica.
+ * @param aulaId ID del aula.
+ * @param estudianteId ID del estudiante a remover.
  */
 export async function removerEstudiante(aulaId: number, estudianteId: number): Promise<void> {
-  const token = localStorage.getItem('token');
-  await axios.delete(`${API_URL}/Aulas/${aulaId}/estudiante/${estudianteId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  await api.delete(`/Aulas/${aulaId}/estudiante/${estudianteId}`);
 }
 
+/**
+ * Servicio para gestión de aulas virtuales por parte de docentes.
+ */
 export const aulasService = {
   obtenerMisAulas,
   crearAula,

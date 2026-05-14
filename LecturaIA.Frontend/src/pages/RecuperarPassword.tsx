@@ -1,3 +1,4 @@
+import { alertaInformativa } from '../utils/alerts';
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -51,7 +52,7 @@ export default function RecuperarPassword() {
 
     try {
       await authService.restablecerPassword(token!, nuevaPassword, confirmarPassword);
-      alert('Contraseña restablecida exitosamente');
+      alertaInformativa('Contraseña restablecida exitosamente');
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.mensaje || 'Token inválido o expirado');

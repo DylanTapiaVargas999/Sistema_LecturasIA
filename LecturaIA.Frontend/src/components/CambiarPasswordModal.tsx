@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { passwordService } from '../services/passwordService';
-import type { ValidacionPasswordDto } from '../services/passwordService';
+import type { ValidacionPasswordDto } from '../types/auth.types';
+import { useAuth } from '../hooks/useAuth';
+import { UI_CONFIG } from '../config/constants';
 
 interface CambiarPasswordModalProps {
   isOpen: boolean;
@@ -8,6 +11,8 @@ interface CambiarPasswordModalProps {
 }
 
 export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswordModalProps) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [passwordActual, setPasswordActual] = useState('');
   const [nuevaPassword, setNuevaPassword] = useState('');
   const [confirmarPassword, setConfirmarPassword] = useState('');
@@ -27,7 +32,7 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
         } catch (err) {
           console.error('Error validando contraseña:', err);
         }
-      }, 500); // Debounce de 500ms
+      }, UI_CONFIG.DEBOUNCE_DELAY_MS);
 
       return () => clearTimeout(timer);
     } else {
@@ -43,31 +48,22 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
       }, 1000);
       return () => clearTimeout(timer);
     } else if (showSuccess && countdown === 0) {
-      // Obtener tipo de usuario antes de cerrar sesión
-      const userStr = localStorage.getItem('user');
+      // Determinar redirección
       let redirectUrl = '/';
       
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          if (user.tipoUsuario === 'Estudiante') {
-            redirectUrl = '/estudiante';
-          } else if (user.tipoUsuario === 'Docente') {
-            redirectUrl = '/docente';
-          } else if (user.tipoUsuario === 'Administrador') {
-            redirectUrl = '/docente'; // Admin usa la misma ruta de docente
-          }
-        } catch (err) {
-          console.error('Error parsing user:', err);
+      if (user) {
+        if (user.tipoUsuario === 'Estudiante') {
+          redirectUrl = '/estudiante';
+        } else if (user.tipoUsuario === 'Docente' || user.tipoUsuario === 'Administrador') {
+          redirectUrl = '/docente'; 
         }
       }
       
       // Cerrar sesión y redirigir
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = redirectUrl;
+      logout();
+      navigate(redirectUrl);
     }
-  }, [showSuccess, countdown]);
+  }, [showSuccess, countdown, user, logout, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +80,7 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
       return;
     }
 
-    if (validacion && !validacion.esFuerte) {
+    if (validacion && validacion.nivel !== 'Fuerte') {
       setError('La contraseña no cumple con los requisitos de seguridad');
       return;
     }
@@ -214,7 +210,7 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
             {/* Indicador de fortaleza */}
             {validacion && (
               <div className="mt-2">
-                {validacion.esFuerte ? (
+                {validacion.nivel === 'Fuerte' ? (
                   <div className="flex items-center text-green-600 text-sm">
                     <svg className="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path
@@ -238,7 +234,7 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
                       <span className="font-medium">Contraseña {validacion.nivel.toLowerCase()}</span>
                     </div>
                     <ul className="text-sm text-red-600 ml-6 list-disc">
-                      {validacion.mensajes.map((mensaje, idx) => (
+                      {validacion.feedback.map((mensaje: string, idx: number) => (
                         <li key={idx}>{mensaje}</li>
                       ))}
                     </ul>
@@ -317,7 +313,7 @@ export default function CambiarPasswordModal({ isOpen, onClose }: CambiarPasswor
                 !nuevaPassword ||
                 !confirmarPassword ||
                 nuevaPassword !== confirmarPassword ||
-                (validacion ? !validacion.esFuerte : false)
+                (validacion ? validacion.nivel !== 'Fuerte' : false)
               }
             >
               {loading ? 'Guardando...' : 'Guardar'}

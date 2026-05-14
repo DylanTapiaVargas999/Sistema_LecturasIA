@@ -9,80 +9,62 @@ namespace LecturaIA.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private const string DatosInvalidosMensaje = "Datos inválidos";
+    private const string EmailYaRegistradoMensaje = "Este correo ya está registrado. ¿Deseas iniciar sesión?";
+    private const string RegistroFallidoMensaje = "No se pudo completar el registro. Intenta nuevamente";
+    private const string RegistroExitosoMensaje = "Registro exitoso. Por favor, verifica tu correo electrónico para activar tu cuenta";
 
     public AuthController(IAuthService authService)
     {
         _authService = authService;
     }
 
+    /// <summary>
+    /// Registra un nuevo estudiante.
+    /// </summary>
     [HttpPost("registro/estudiante")]
     public async Task<ActionResult> RegistrarEstudiante([FromBody] RegistroEstudianteDto dto)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
-
-        // Verificar email duplicado
+        // Fail fast: email duplicado
         var emailExiste = await _authService.VerificarEmailExiste(dto.Email);
         if (emailExiste)
         {
-            return BadRequest(new
-            {
-                mensaje = "Este correo ya está registrado. ¿Deseas iniciar sesión?"
-            });
+            return BadRequest(new { mensaje = EmailYaRegistradoMensaje });
         }
-
         var resultado = await _authService.RegistrarEstudiante(dto);
-
         if (!resultado)
         {
-            return BadRequest(new
-            {
-                mensaje = "No se pudo completar el registro. Intenta nuevamente"
-            });
+            return BadRequest(new { mensaje = RegistroFallidoMensaje });
         }
-
-        return Ok(new
-        {
-            mensaje = "Registro exitoso. Por favor, verifica tu correo electrónico para activar tu cuenta",
-            email = dto.Email
-        });
+        return Ok(new { mensaje = RegistroExitosoMensaje, email = dto.Email });
     }
 
+    /// <summary>
+    /// Registra un nuevo docente.
+    /// </summary>
     [HttpPost("registro/docente")]
     public async Task<ActionResult> RegistrarDocente([FromBody] RegistroDocenteDto dto)
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
-
-        // Verificar email duplicado primero
+        // Fail fast: email duplicado
         var emailExiste = await _authService.VerificarEmailExiste(dto.Email);
         if (emailExiste)
         {
-            return BadRequest(new
-            {
-                mensaje = "Este correo ya está registrado. ¿Deseas iniciar sesión?"
-            });
+            return BadRequest(new { mensaje = EmailYaRegistradoMensaje });
         }
-
         var resultado = await _authService.RegistrarDocente(dto);
-
         if (!resultado)
         {
-            return BadRequest(new
-            {
-                mensaje = "No se pudo completar el registro. Intenta nuevamente"
-            });
+            return BadRequest(new { mensaje = RegistroFallidoMensaje });
         }
-
-        return Ok(new
-        {
-            mensaje = "Registro exitoso. Por favor, verifica tu correo electrónico para activar tu cuenta",
-            email = dto.Email
-        });
+        return Ok(new { mensaje = RegistroExitosoMensaje, email = dto.Email });
     }
 
     [HttpPost("login")]
@@ -90,7 +72,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         var resultado = await _authService.Login(dto);
@@ -183,7 +165,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { mensaje = "Email inválido", errores = ModelState });
         }
 
-        var resultado = await _authService.SolicitarRecuperacionPassword(dto.Email);
+        await _authService.SolicitarRecuperacionPassword(dto.Email);
 
         // Por seguridad, siempre devolvemos éxito aunque el email no exista
         return Ok(new
@@ -197,7 +179,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         var resultado = await _authService.RestablecerPassword(dto.Token, dto.NuevaPassword);
@@ -221,7 +203,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(new { mensaje = "Datos inválidos", errores = ModelState });
+            return BadRequest(new { mensaje = DatosInvalidosMensaje, errores = ModelState });
         }
 
         var resultado = await _authService.VerificarCodigoLogin(dto.Email, dto.Codigo);

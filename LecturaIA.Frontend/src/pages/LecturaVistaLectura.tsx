@@ -1,3 +1,4 @@
+import { alertaError } from '../utils/alerts';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lecturaService, getImageUrl, type LecturaGenerada } from '../services/lecturaService';
@@ -37,15 +38,11 @@ export default function LecturaVistaLectura() {
   const cargarLecturaEIniciarSesion = async () => {
     try {
       setLoading(true);
-      console.log('Cargando lectura con ID:', id);
       const data = await lecturaService.obtenerLectura(Number(id));
-      console.log('Lectura cargada:', data);
       setLectura(data);
       
       // Iniciar sesión de lectura
-      console.log('Iniciando sesión de lectura...');
       const sesion = await sesionLecturaService.iniciarLectura(Number(id));
-      console.log('Sesión iniciada:', sesion);
       setSesionId(sesion.id);
       setTiempoInicio(new Date());
       
@@ -67,14 +64,13 @@ export default function LecturaVistaLectura() {
       const tiempoFin = new Date();
       const tiempoMinutos = (tiempoFin.getTime() - tiempoInicio.getTime()) / 60000;
       
-      console.log(`⏱️ Finalizando lectura - Tiempo: ${tiempoMinutos.toFixed(2)} minutos (${Math.round(tiempoMinutos * 60)} segundos)`);
       await sesionLecturaService.finalizarLectura(sesionId, tiempoMinutos);
       
       // Mostrar mensaje de felicitaciones
       setMostrarFelicitaciones(true);
       
     } catch (err: any) {
-      alert('Error al finalizar la lectura: ' + err.message);
+      alertaError('Error al finalizar la lectura: ' + err.message);
       setTerminando(false);
     }
   };
@@ -204,8 +200,8 @@ export default function LecturaVistaLectura() {
           {/* Contenido de la lectura - SCROLLEABLE */}
           <div className="p-8 max-h-[600px] overflow-y-auto">
             <div className="prose prose-lg max-w-none">
-              {lectura.contenido.split('\n\n').map((parrafo, index) => (
-                <p key={index} className="text-gray-700 leading-relaxed mb-4 text-justify">
+              {lectura.contenido.split('\n\n').map((parrafo, i) => (
+                <p key={`${i}-${parrafo.substring(0, 10)}`} className="text-gray-700 leading-relaxed mb-4 text-justify">
                   {parrafo}
                 </p>
               ))}

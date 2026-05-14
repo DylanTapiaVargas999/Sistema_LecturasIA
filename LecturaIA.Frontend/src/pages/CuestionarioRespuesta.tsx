@@ -1,3 +1,4 @@
+import { alertaError } from '../utils/alerts';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { cuestionarioService, type CuestionarioDto, type PreguntaDto, type RespuestaDto } from '../services/cuestionarioService';
@@ -88,7 +89,7 @@ export default function CuestionarioRespuesta() {
     );
 
     if (preguntasSinResponder && preguntasSinResponder.length > 0) {
-      alert(`Tienes ${preguntasSinResponder.length} pregunta(s) sin responder. Por favor, responde todas las preguntas antes de enviar.`);
+      alertaError(`Tienes ${preguntasSinResponder.length} pregunta(s) sin responder. Por favor, responde todas las preguntas antes de enviar.`);
       return;
     }
 
@@ -109,8 +110,7 @@ export default function CuestionarioRespuesta() {
 
       // Calcular tiempo transcurrido en minutos con decimales precisos
       const tiempoMinutos = tiempoTranscurrido / 60;
-      console.log(`⏱️ Tiempo del cuestionario: ${tiempoMinutos.toFixed(2)} minutos (${tiempoTranscurrido} segundos)`);
-
+      
       const resultado = await cuestionarioService.enviarRespuestas(cuestionarioId!, respuestasArray, tiempoMinutos);
 
       // Navegar a la página de resultados
@@ -119,7 +119,7 @@ export default function CuestionarioRespuesta() {
       });
     } catch (error: any) {
       console.error('Error al enviar respuestas:', error);
-      alert(error.message || 'Error al enviar las respuestas');
+      alertaError(error.message || 'Error al enviar las respuestas');
       setIsSubmitting(false);
     }
   };

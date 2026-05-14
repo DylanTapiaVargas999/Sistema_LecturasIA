@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import examenGrupalService from '../../services/examenGrupalService';
 import type { CrearExamenGrupalDto } from '../../services/examenGrupalService';
+import { TipoTexto, LongitudTexto, GradoEscolar, ComplejidadTexto } from '../../types/enums';
 import './CrearExamenGrupal.css';
 
 const CrearExamenGrupal: React.FC = () => {
@@ -13,10 +14,10 @@ const CrearExamenGrupal: React.FC = () => {
     titulo: '',
     descripcion: '',
     temaConcepto: '',
-    tipoTexto: 'Narrativo',
-    longitudTexto: 'Medio',
-    gradoEscolar: '4to',
-    complejidad: 'Basica',
+    tipoTexto: TipoTexto.NARRATIVO,
+    longitudTexto: LongitudTexto.MEDIO,
+    gradoEscolar: `${GradoEscolar.CUARTO}to`,
+    complejidad: ComplejidadTexto.BASICA,
     cantidadPreguntas: 10,
     fechaLimite: '',
     publicado: true,
@@ -26,10 +27,10 @@ const CrearExamenGrupal: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const tiposTexto = ['Narrativo', 'Descriptivo', 'Expositivo', 'Argumentativo', 'Instructivo'];
-  const longitudesTexto = ['Corto', 'Medio', 'Largo'];
-  const gradosEscolares = ['4to', '5to', '6to'];
-  const complejidades = ['Basica', 'Intermedia', 'Avanzada'];
+  const tiposTexto = Object.values(TipoTexto);
+  const longitudesTexto = Object.values(LongitudTexto);
+  const gradosEscolares = Object.values(GradoEscolar).filter(val => typeof val === 'number').map(val => `${val}to`);
+  const complejidades = Object.values(ComplejidadTexto);
   const cantidadesPreguntas = [5, 8, 10, 12, 15];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

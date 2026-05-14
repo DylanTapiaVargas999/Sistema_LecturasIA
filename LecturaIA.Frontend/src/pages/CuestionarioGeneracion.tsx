@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { cuestionarioService } from '../services/cuestionarioService';
+import { EstadoCuestionario } from '../types/enums';
+import { UI_CONFIG } from '../config/constants';
+
+const POLLING_INTERVAL_MS = UI_CONFIG.POLLING_INTERVAL_MS;
+const POLLING_MAX_ATTEMPTS = UI_CONFIG.POLLING_MAX_ATTEMPTS;
 
 export default function CuestionarioGeneracion() {
   const { id: lecturaId } = useParams<{ id: string }>();
@@ -8,7 +13,7 @@ export default function CuestionarioGeneracion() {
   const sesionId = searchParams.get('sesionId');
   const navigate = useNavigate();
 
-  const [estado, setEstado] = useState<'generando' | 'listo' | 'error'>('generando');
+  const [estado, setEstado] = useState<EstadoCuestionario>(EstadoCuestionario.GENERANDO);
   const [, setCuestionarioId] = useState<string | null>(null);
   const [mensajeError, setMensajeError] = useState<string>('');
   const [progreso, setProgreso] = useState(0);
@@ -16,7 +21,7 @@ export default function CuestionarioGeneracion() {
   useEffect(() => {
     if (!sesionId) {
       setMensajeError('No se proporcionó ID de sesión');
-      setEstado('error');
+      setEstado(EstadoCuestionario.ERROR);
       return;
     }
 
@@ -35,50 +40,50 @@ export default function CuestionarioGeneracion() {
     } catch (error: any) {
       console.error('Error al iniciar generación:', error);
       setMensajeError(error.message || 'Error al generar cuestionario');
-      setEstado('error');
+      setEstado(EstadoCuestionario.ERROR);
     }
   };
 
   const iniciarPolling = (id: string) => {
     let intentos = 0;
-    const maxIntentos = 90; // 3 minutos máximo (90 intentos x 2 segundos)
 
     const interval = setInterval(async () => {
       try {
         intentos++;
         
         // Actualizar barra de progreso (simulada)
-        setProgreso(Math.min((intentos / maxIntentos) * 100, 95));
+        setProgreso(Math.min((intentos / POLLING_MAX_ATTEMPTS) * 100, 95));
 
         const cuestionario = await cuestionarioService.obtenerCuestionario(id);
 
-        if (cuestionario.estado === 'listo') {
+        if (cuestionario.estado === EstadoCuestionario.LISTO) {
           clearInterval(interval);
           setProgreso(100);
-          setEstado('listo');
+          setEstado(EstadoCuestionario.LISTO);
           
           // Esperar un poco antes de redirigir para mostrar el 100%
           setTimeout(() => {
             navigate(`/estudiante/cuestionario/${lecturaId}/responder?cuestionarioId=${id}`);
           }, 1000);
-        } else if (cuestionario.estado === 'error') {
+        } else if (cuestionario.estado === EstadoCuestionario.ERROR) {
           // El backend marcó el cuestionario como error
           clearInterval(interval);
           setMensajeError('Hubo un error al generar el cuestionario. Por favor, intenta de nuevo.');
-          setEstado('error');
-        } else if (intentos >= maxIntentos) {
+          setEstado(EstadoCuestionario.ERROR);
+        } else if (intentos >= POLLING_MAX_ATTEMPTS) {
           clearInterval(interval);
           setMensajeError('El cuestionario está tardando demasiado. Por favor, intenta más tarde o contacta al administrador.');
-          setEstado('error');
+          setEstado(EstadoCuestionario.ERROR);
         }
       } catch (error: any) {
         console.error('Error en polling:', error);
         clearInterval(interval);
         setMensajeError(error.message || 'Error al verificar estado del cuestionario');
-        setEstado('error');
+        setEstado(EstadoCuestionario.ERROR);
       }
-    }, 2000); // Verificar cada 2 segundos
+    }, POLLING_INTERVAL_MS);
   };
+
 
   const handleVolver = () => {
     navigate('/estudiante/dashboard');
@@ -87,7 +92,7 @@ export default function CuestionarioGeneracion() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-        {estado === 'generando' && (
+        {estado === EstadoCuestionario.GENERANDO && (
           <div className="text-center">
             {/* Icono animado de IA */}
             <div className="mb-6 flex justify-center">
@@ -164,7 +169,7 @@ export default function CuestionarioGeneracion() {
           </div>
         )}
 
-        {estado === 'listo' && (
+        {estado === EstadoCuestionario.LISTO && (
           <div className="text-center">
             <div className="mb-6">
               <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto">
@@ -184,7 +189,7 @@ export default function CuestionarioGeneracion() {
           </div>
         )}
 
-        {estado === 'error' && (
+        {estado === EstadoCuestionario.ERROR && (
           <div className="text-center">
             <div className="mb-6">
               <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mx-auto">

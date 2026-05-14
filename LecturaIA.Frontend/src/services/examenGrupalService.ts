@@ -1,232 +1,15 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-// ============================================
-// INTERFACES / TIPOS
-// ============================================
-
-interface CrearExamenGrupalDto {
-  aulaId: number;
-  titulo: string;
-  descripcion?: string;
-  temaConcepto: string;
-  tipoTexto: string;
-  longitudTexto: string;
-  gradoEscolar: string;
-  complejidad: string;
-  cantidadPreguntas: number;
-  fechaLimite?: string;
-  publicado: boolean;
-}
-
-interface ExamenGrupalDto {
-  id: number;
-  aulaId: number;
-  nombreAula: string;
-  titulo: string;
-  descripcion?: string;
-  longitudTexto: string;
-  gradoEscolar: string;
-  complejidad: string;
-  fechaCreacion: string;
-  fechaLimite?: string;
-  publicado: boolean;
-  lecturaId: number;
-  tituloLectura: string;
-  tipoLectura: string;
-  cantidadPreguntas: number;
-  totalEstudiantes: number;
-  estudiantesCompletados: number;
-  porcentajeCompletado: number;
-  promedioGrupal?: number;
-  tiempoPromedioMinutos?: number;
-}
-
-interface AsignacionExamenDto {
-  id: number;
-  examenGrupalId: number;
-  tituloExamen: string;
-  descripcionExamen?: string;
-  nombreDocente: string;
-  estado: string;
-  fechaAsignacion: string;
-  fechaLimite?: string;
-  fechaCompletado?: string;
-  calificacion?: number;
-  lecturaId: number;
-  tituloLectura: string;
-  longitudTexto: string;
-  cantidadPreguntas: number;
-}
-
-interface ResultadoEstudianteDto {
-  estudianteId: number;
-  nombreCompleto: string;
-  estado: string;
-  fechaCompletado?: string;
-  calificacion?: number;
-  tiempoTotalMinutos?: number;
-  tiempoLecturaMinutos?: number;
-  tiempoQuizMinutos?: number;
-}
-
-interface EstadisticasExamenDto {
-  totalEstudiantes: number;
-  completados: number;
-  pendientes: number;
-  porcentajeCompletado: number;
-  promedioGrupal?: number;
-  calificacionMaxima?: number;
-  calificacionMinima?: number;
-  tiempoPromedioMinutos?: number;
-  estudiantesPendientes: string[];
-  estudiantesConDificultad: string[];
-  estudiantesDestacados: string[];
-}
-
-interface ResultadosExamenGrupalDto {
-  examenInfo: ExamenGrupalDto;
-  resultados: ResultadoEstudianteDto[];
-  estadisticas: EstadisticasExamenDto;
-}
-
-const examenGrupalService = {
-  /**
-   * Crea un examen grupal con generación de IA
-   * @param dto Datos del examen a crear
-   * @returns Examen creado con estadísticas
-   */
-  crearExamenConIA: async (dto: CrearExamenGrupalDto): Promise<{ mensaje: string; examen: ExamenGrupalDto }> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/api/examengrupales/crear`, dto, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.data;
-  },
-
-  /**
-   * Obtiene todos los exámenes de un salón (vista del docente)
-   * @param aulaId ID del aula
-   * @returns Lista de exámenes con estadísticas
-   */
-  obtenerExamenesDelSalon: async (aulaId: number): Promise<ExamenGrupalDto[]> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/examengrupales/salon/${aulaId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  /**
-   * Obtiene los exámenes asignados al estudiante actual
-   * @returns Lista de exámenes asignados
-   */
-  obtenerExamenesAsignados: async (): Promise<AsignacionExamenDto[]> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/examengrupales/asignados`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  /**
-   * Obtiene los resultados consolidados de un examen grupal
-   * @param examenGrupalId ID del examen grupal
-   * @returns Resultados con estadísticas detalladas
-   */
-  obtenerResultadosConsolidados: async (examenGrupalId: number): Promise<ResultadosExamenGrupalDto> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/examengrupales/${examenGrupalId}/resultados`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  /**
-   * Marca una asignación como completada
-   * @param examenGrupalId ID del examen grupal
-   * @param sesionLecturaId ID de la sesión de lectura
-   * @returns Mensaje de confirmación
-   */
-  marcarComoCompletado: async (examenGrupalId: number, sesionLecturaId: string): Promise<{ mensaje: string }> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_URL}/api/examengrupales/${examenGrupalId}/completar`,
-      { sesionLecturaId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    return response.data;
-  },
-
-  /**
-   * Elimina un examen grupal (solo si no hay estudiantes que lo completaron)
-   * @param examenGrupalId ID del examen grupal
-   * @returns Mensaje de confirmación
-   */
-  eliminarExamen: async (examenGrupalId: number): Promise<{ mensaje: string }> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.delete(`${API_URL}/api/examengrupales/${examenGrupalId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  /**
-   * Lista todos los exámenes de un aula (para docente)
-   * @param aulaId ID del aula
-   * @returns Lista de exámenes del aula
-   */
-  listarExamenesAula: async (aulaId: number): Promise<any[]> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/examengrupales/docente/aula/${aulaId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  /**
-   * Reasigna un examen existente a todos los estudiantes del aula
-   * @param examenId ID del examen a reasignar
-   * @param dto Datos de reasignación (fecha límite opcional)
-   * @returns Mensaje de confirmación
-   */
-  reasignarExamen: async (examenId: number, dto: { fechaLimite?: string }): Promise<{ mensaje: string; asignacionesCreadas: number }> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_URL}/api/examengrupales/${examenId}/reasignar`,
-      dto,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    return response.data;
-  },
-};
+import api from '../config/api';
+import type { 
+  CrearExamenGrupalDto, 
+  ExamenGrupalDto, 
+  AsignacionExamenDto, 
+  ResultadoEstudianteDto, 
+  EstadisticasExamenDto, 
+  ResultadosExamenGrupalDto 
+} from '../types/exam.types';
 
 // ============================================
-// EXPORTACIONES
+// EXPORTACIONES DE TIPOS
 // ============================================
 
 export type {
@@ -236,6 +19,96 @@ export type {
   ResultadoEstudianteDto,
   EstadisticasExamenDto,
   ResultadosExamenGrupalDto,
+};
+
+// ============================================
+// SERVICIO PRINCIPAL
+// ============================================
+
+/**
+ * Servicio para la gestión de exámenes grupales en aulas, incluyendo creación, asignación y consulta de resultados.
+ */
+const examenGrupalService = {
+  /**
+   * Crea un nuevo examen grupal utilizando IA para generar el contenido.
+   * @param dto Datos necesarios para crear el examen (tema, aula, configuración).
+   * @returns Objeto con el examen creado y mensaje de éxito.
+   */
+  crearExamenConIA: async (dto: CrearExamenGrupalDto): Promise<{ mensaje: string; examen: ExamenGrupalDto }> => {
+    const response = await api.post('/examengrupales/crear', dto);
+    return response.data;
+  },
+
+  /**
+   * Obtiene la lista de exámenes creados para un salón específico.
+   * @param aulaId ID del aula a consultar.
+   * @returns Lista de exámenes asociados al aula.
+   */
+  obtenerExamenesDelSalon: async (aulaId: number): Promise<ExamenGrupalDto[]> => {
+    const response = await api.get(`/examengrupales/salon/${aulaId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene los exámenes asignados al estudiante autenticado.
+   * @returns Lista de asignaciones pendientes o completadas.
+   */
+  obtenerExamenesAsignados: async (): Promise<AsignacionExamenDto[]> => {
+    const response = await api.get('/examengrupales/asignados');
+    return response.data;
+  },
+
+  /**
+   * Obtiene los resultados consolidados de todos los estudiantes para un examen grupal.
+   * @param examenGrupalId ID del examen grupal.
+   * @returns Estadísticas y resultados detallados por estudiante.
+   */
+  obtenerResultadosConsolidados: async (examenGrupalId: number): Promise<ResultadosExamenGrupalDto> => {
+    const response = await api.get(`/examengrupales/${examenGrupalId}/resultados`);
+    return response.data;
+  },
+
+  /**
+   * Marca un examen como completado para un estudiante, vinculándolo a una sesión de lectura.
+   * @param examenGrupalId ID del examen grupal.
+   * @param sesionLecturaId GUID de la sesión de lectura completada.
+   * @returns Mensaje de confirmación.
+   */
+  marcarComoCompletado: async (examenGrupalId: number, sesionLecturaId: string): Promise<{ mensaje: string }> => {
+    const response = await api.post(`/examengrupales/${examenGrupalId}/completar`, { sesionLecturaId });
+    return response.data;
+  },
+
+  /**
+   * Elimina un examen grupal del sistema.
+   * @param examenGrupalId ID del examen a eliminar.
+   * @returns Mensaje de confirmación.
+   */
+  eliminarExamen: async (examenGrupalId: number): Promise<{ mensaje: string }> => {
+    const response = await api.delete(`/examengrupales/${examenGrupalId}`);
+    return response.data;
+  },
+
+  /**
+   * Lista todos los exámenes de un aula desde la perspectiva del docente.
+   * @param aulaId ID del aula.
+   * @returns Lista completa de exámenes.
+   */
+  listarExamenesAula: async (aulaId: number): Promise<ExamenGrupalDto[]> => {
+    const response = await api.get(`/examengrupales/docente/aula/${aulaId}`);
+    return response.data;
+  },
+
+  /**
+   * Reasigna un examen existente a los estudiantes actuales del aula (útil para nuevos estudiantes).
+   * @param examenId ID del examen a reasignar.
+   * @param dto Opciones de reasignación (ej: nueva fecha límite).
+   * @returns Mensaje y cantidad de nuevas asignaciones creadas.
+   */
+  reasignarExamen: async (examenId: number, dto: { fechaLimite?: string }): Promise<{ mensaje: string; asignacionesCreadas: number }> => {
+    const response = await api.post(`/examengrupales/${examenId}/reasignar`, dto);
+    return response.data;
+  },
 };
 
 export default examenGrupalService;

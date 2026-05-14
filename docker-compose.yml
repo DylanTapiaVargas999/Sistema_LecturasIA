@@ -1,58 +1,65 @@
-version: '3.8'
-
 services:
-  # Backend API
+
+  # SQL Server
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lecturaIA-db
+    restart: unless-stopped
+    environment:
+      SA_PASSWORD: "Password123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    networks:
+      - lecturaIA-network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password123!", "-Q", "SELECT 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  # Backend API (.NET)
   backend:
     build:
       context: ./LecturaIA.API
       dockerfile: Dockerfile
     container_name: lecturaIA-backend
     restart: unless-stopped
-    ports:
-      - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
     env_file:
       - ./LecturaIA.API/.env.production
+    depends_on:
+      - database
     volumes:
-      # Persistir las imágenes generadas por la IA
       - lectura-images:/app/wwwroot/images
     networks:
       - lecturaIA-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
-  # Frontend React
+  # Frontend React (Vite + Nginx interno)
   frontend:
     build:
       context: ./LecturaIA.Frontend
       dockerfile: Dockerfile
     container_name: lecturaIA-frontend
     restart: unless-stopped
-    ports:
-      - "3000:80"
     depends_on:
       - backend
     networks:
       - lecturaIA-network
 
-  # Nginx Reverse Proxy
+  # Reverse Proxy (ÚNICA entrada al sistema)
   nginx:
     image: nginx:alpine
     container_name: lecturaIA-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "8081:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/logs:/var/log/nginx
     depends_on:
       - backend
       - frontend
@@ -65,4 +72,4 @@ networks:
 
 volumes:
   lectura-images:
-    driver: local
+  sql-data:

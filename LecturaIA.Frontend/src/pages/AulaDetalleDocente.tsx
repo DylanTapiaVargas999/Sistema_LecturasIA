@@ -1,3 +1,4 @@
+import { alertaError, alertaInformativa } from '../utils/alerts';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { aulasService, type AulaDetalle, type EstudianteAula } from '../services/aulasService';
@@ -60,7 +61,7 @@ export default function AulaDetalleDocente() {
       cargarDatosAula();
       setEstudianteAEliminar(null);
     } catch (err: any) {
-      alert('Error al remover estudiante: ' + (err.response?.data?.mensaje || err.message));
+      alertaError('Error al remover estudiante: ' + (err.response?.data?.mensaje || err.message));
     }
   };
 
@@ -80,7 +81,7 @@ export default function AulaDetalleDocente() {
         document.execCommand('copy');
         document.body.removeChild(textarea);
       }
-      alert(`Código ${codigo} copiado`);
+      alertaInformativa(`Código ${codigo} copiado`);
     } catch (error) {
       console.error('Error al copiar:', error);
       // Fallback si todo falla
@@ -92,7 +93,7 @@ export default function AulaDetalleDocente() {
       textarea.select();
       document.execCommand('copy');
       document.body.removeChild(textarea);
-      alert(`Código ${codigo} copiado`);
+      alertaInformativa(`Código ${codigo} copiado`);
     }
   };
 

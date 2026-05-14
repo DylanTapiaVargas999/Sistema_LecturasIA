@@ -27,21 +27,19 @@ public class AulasController : ControllerBase
     /// </summary>
     private string GenerarCodigoVinculacion()
     {
-        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Sin vocales ni 0,1 para evitar confusiones
+        const string CaracteresCodigo = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Sin vocales ni 0,1 para evitar confusiones
+        const int LongitudCodigo = 6;
         var random = new Random();
         string codigo;
-        
         do
         {
-            codigo = new string(Enumerable.Range(0, 6)
-                .Select(_ => chars[random.Next(chars.Length)])
+            codigo = new string(Enumerable.Range(0, LongitudCodigo)
+                .Select(_ => CaracteresCodigo[random.Next(CaracteresCodigo.Length)])
                 .ToArray());
         }
         while (_context.Aulas.Any(a => a.CodigoVinculacion == codigo));
-
         return codigo;
     }
-
     /// <summary>
     /// Crea un aula nueva (solo Docentes)
     /// </summary>
@@ -54,6 +52,7 @@ public class AulasController : ControllerBase
             var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
             {
+                // Fail fast: token inválido
                 return Unauthorized(new { mensaje = "Token inválido" });
             }
 
@@ -63,6 +62,7 @@ public class AulasController : ControllerBase
 
             if (docente == null)
             {
+                // Fail fast: docente no encontrado
                 return NotFound(new { mensaje = "Docente no encontrado" });
             }
 

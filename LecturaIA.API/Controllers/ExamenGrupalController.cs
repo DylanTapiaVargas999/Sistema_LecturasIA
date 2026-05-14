@@ -43,18 +43,17 @@ public class ExamenGrupalController : ControllerBase
             var docenteId = await ObtenerDocenteIdAsync();
             if (docenteId == 0)
             {
+                // Fail fast: usuario no autorizado
                 return Unauthorized(new { mensaje = "Usuario no autorizado" });
             }
-
             // Verificar que el aula pertenece al docente
             var aula = await _context.Aulas
                 .FirstOrDefaultAsync(a => a.Id == aulaId && a.DocenteId == docenteId);
-
             if (aula == null)
             {
+                // Fail fast: aula no encontrada o no autorizado
                 return NotFound(new { mensaje = "Aula no encontrada o no autorizado" });
             }
-
             var examenes = await _context.ExamenesGrupales
                 .Include(e => e.Lectura)
                 .Include(e => e.Asignaciones)
@@ -79,7 +78,6 @@ public class ExamenGrupalController : ControllerBase
                         : "Pendiente"
                 })
                 .ToListAsync();
-
             return Ok(examenes);
         }
         catch (Exception ex)
